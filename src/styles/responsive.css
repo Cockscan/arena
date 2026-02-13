@@ -1,0 +1,91 @@
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Breakpoints & Mobile
+   ═══════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .sidebar {
+    display: none;
+  }
+  .main {
+    margin-left: 0;
+    max-width: 100%;
+  }
+  .hero-score {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-nav {
+    display: none;
+  }
+  .hero {
+    height: 280px;
+  }
+  .hero-content {
+    padding: 28px;
+  }
+  .hero-title {
+    font-size: 32px;
+  }
+  .main {
+    padding: 16px;
+  }
+  .video-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .logo-text {
+    display: none;
+  }
+  .search-bar {
+    max-width: none;
+  }
+  .hero {
+    height: 240px;
+    border-radius: 10px;
+  }
+  .hero-content {
+    padding: 20px;
+  }
+  .hero-title {
+    font-size: 26px;
+  }
+  .hero-subtitle {
+    font-size: 13px;
+  }
+  .hero-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .btn-watch,
+  .btn-schedule {
+    padding: 10px 20px;
+    font-size: 13px;
+    justify-content: center;
+  }
+  .main {
+    padding: 12px;
+  }
+  .video-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .live-ticker {
+    gap: 10px;
+  }
+  .ticker-card {
+    width: 200px;
+  }
+  .schedule-table th:nth-child(3),
+  .schedule-table td:nth-child(3) {
+    display: none;
+  }
+}

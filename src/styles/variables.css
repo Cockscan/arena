@@ -1,0 +1,49 @@
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS — Arena Sports
+   ═══════════════════════════════════════════ */
+
+:root {
+  /* Background */
+  --bg-primary: #121517;
+  --bg-secondary: #1a1e21;
+  --bg-card: #1f2326;
+  --bg-card-hover: #272c30;
+  --surface: #2a2f33;
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.07);
+  --border-bright: rgba(255, 255, 255, 0.12);
+
+  /* Text */
+  --text-primary: #f0f1f2;
+  --text-secondary: #959da5;
+  --text-muted: #5c6670;
+
+  /* Brand — Rumble Green */
+  --accent: #85c742;
+  --accent-glow: rgba(133, 199, 66, 0.25);
+  --accent-secondary: #6db533;
+
+  /* Semantic */
+  --live: #e53935;
+  --live-glow: rgba(229, 57, 53, 0.3);
+  --green: #85c742;
+  --gold: #f4a623;
+  --blue: #3a9bff;
+
+  /* Layout */
+  --sidebar-width: 280px;
+  --header-height: 64px;
+
+  /* Radius */
+  --radius: 10px;
+  --radius-sm: 6px;
+
+  /* Fonts */
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-heading: 'Oswald', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+
+  /* Motion */
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}

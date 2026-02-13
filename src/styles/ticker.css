@@ -1,0 +1,150 @@
+/* ═══════════════════════════════════════════
+   TICKER — Live Scores Strip
+   ═══════════════════════════════════════════ */
+
+.live-ticker {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 24px;
+  scrollbar-width: none;
+}
+
+.live-ticker::-webkit-scrollbar {
+  display: none;
+}
+
+.ticker-card {
+  flex: 1 0 auto;
+  min-width: 220px;
+  /* Removed max-width to let items fill the row */
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.ticker-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+
+.ticker-card.live::before {
+  background: var(--live);
+}
+
+.ticker-card.upcoming::before {
+  background: var(--blue);
+}
+
+.ticker-card.finished::before {
+  background: var(--green);
+}
+
+.ticker-card:hover {
+  border-color: var(--border-bright);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.ticker-sport {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ticker-status {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.ticker-status.live {
+  background: rgba(229, 57, 53, 0.15);
+  color: var(--live);
+}
+
+.ticker-status.upcoming {
+  background: rgba(58, 155, 255, 0.12);
+  color: var(--blue);
+}
+
+.ticker-status.finished {
+  background: rgba(133, 199, 66, 0.12);
+  color: var(--green);
+}
+
+.ticker-matchup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  position: relative;
+}
+
+.ticker-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 40%;
+}
+
+.ticker-team:first-child {
+  justify-content: flex-start;
+}
+
+.ticker-team:last-child {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.ticker-team-logo {
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.ticker-team-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ticker-score {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 1px;
+  text-align: center;
+  width: 20%;
+  flex-shrink: 0;
+  color: var(--text-primary);
+}

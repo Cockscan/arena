@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARENA — Sports Streaming</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='4' fill='%2385c742'/><polygon points='9,5 19,12 9,19' fill='white'/></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="../src/styles/variables.css">
+  <link rel="stylesheet" href="../src/styles/base.css">
+  <link rel="stylesheet" href="../src/styles/header.css">
+  <link rel="stylesheet" href="../src/styles/sidebar.css">
+  <link rel="stylesheet" href="../src/styles/hero.css">
+  <link rel="stylesheet" href="../src/styles/ticker.css">
+  <link rel="stylesheet" href="../src/styles/cards.css">
+  <link rel="stylesheet" href="../src/styles/schedule.css">
+  <link rel="stylesheet" href="../src/styles/animations.css">
+  <link rel="stylesheet" href="../src/styles/responsive.css">
+  <link rel="stylesheet" href="../src/styles/footer.css">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <a href="#" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+      </div>
+      <div class="logo-text">ARENA<span>.</span></div>
+    </a>
+
+    <div class="search-bar">
+      <input type="text" placeholder="Search live streams, sports, events...">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+
+    <nav class="header-nav">
+      <a href="#" class="active">Home</a>
+      <a href="#">Browse</a>
+      <a href="#">Schedule</a>
+      <div class="live-badge"><div class="live-dot"></div> 12 Live</div>
+    </nav>
+
+    <a href="#" class="btn-signin">Sign In</a>
+  </header>
+
+
+  <!-- LAYOUT -->
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Browse</div>
+        <a class="sidebar-item active" data-filter="all">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          All Sports
+        </a>
+        <a class="sidebar-item" data-filter="football">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+          Football
+        </a>
+        <a class="sidebar-item" data-filter="basketball">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+          Basketball
+        </a>
+        <a class="sidebar-item" data-filter="combat">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="2"/><line x1="12" y1="7" x2="12" y2="17"/></svg>
+          MMA / Boxing
+        </a>
+        <a class="sidebar-item" data-filter="f1">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          Formula 1
+        </a>
+        <a class="sidebar-item" data-filter="olympics">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="10"/></svg>
+          Olympics
+        </a>
+        <a class="sidebar-item" data-filter="cricket">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="22"/><path d="M4.93 4.93l14.14 14.14"/></svg>
+          Cricket
+        </a>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Popular Tags</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0">
+          <span class="sidebar-tag">Champions League</span>
+          <span class="sidebar-tag">Premier League</span>
+          <span class="sidebar-tag">NBA</span>
+          <span class="sidebar-tag">UFC</span>
+          <span class="sidebar-tag">Super Bowl</span>
+          <span class="sidebar-tag">Winter Olympics</span>
+          <span class="sidebar-tag">Formula 1</span>
+          <span class="sidebar-tag">La Liga</span>
+        </div>
+      </div>
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+      <!-- HERO -->
+      <section class="hero">
+        <div class="hero-bg" style="background-image: linear-gradient(to right, rgba(18,21,23,0.95) 0%, rgba(18,21,23,0.5) 100%), url('https://img.youtube.com/vi/ksG9O8PHXbI/maxresdefault.jpg'); background-size: cover; background-position: center;"></div>
+        <div class="hero-content">
+          <div class="hero-live-tag">
+            <div class="live-dot"></div>
+            MILANO CORTINA 2026
+          </div>
+          <h1 class="hero-title">USA <span>vs</span> CANADA</h1>
+          <p class="hero-subtitle">Men's Ice Hockey — The biggest rivalry in hockey renews at the Winter Olympics. 3rd Period thriller.</p>
+          <div class="hero-meta">
+            <span class="hero-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+              3rd Period • 14:20
+            </span>
+            <span class="hero-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              12.4K watching
+            </span>
+          </div>
+          <div class="hero-actions">
+            <button class="btn-watch" onclick="window.open('https://www.youtube.com/results?search_query=winter+olympics+2026+ice+hockey+usa+canada','_blank')">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+              Watch Live
+            </button>
+            <button class="btn-schedule">Schedule</button>
+          </div>
+        </div>
+        <div class="hero-score">
+          <div class="hero-score-teams">
+            <div class="hero-team">
+              <div class="team-badge">USA</div>
+              <span class="team-name">United States</span>
+            </div>
+            <div class="score-display">3 <span class="separator">–</span> 3</div>
+            <div class="hero-team">
+              <div class="team-badge">CAN</div>
+              <span class="team-name">Canada</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LIVE TICKER -->
+      <div class="live-ticker">
+        <div class="ticker-card live">
+          <div class="ticker-sport">Olympics <span class="ticker-status live">● Live</span></div>
+          <div class="ticker-matchup">
+            <div class="ticker-team"><div class="ticker-team-logo">FIN</div><span class="ticker-team-name">Finland</span></div>
+            <div class="ticker-score">2 – 1</div>
+            <div class="ticker-team"><span class="ticker-team-name">Sweden</span><div class="ticker-team-logo">SWE</div></div>
+          </div>
+        </div>
+        <div class="ticker-card finished">
+          <div class="ticker-sport">NFL <span class="ticker-status finished">Final</span></div>
+          <div class="ticker-matchup">
+            <div class="ticker-team"><div class="ticker-team-logo">SEA</div><span class="ticker-team-name">Seahawks</span></div>
+            <div class="ticker-score">29 – 13</div>
+            <div class="ticker-team"><span class="ticker-team-name">Patriots</span><div class="ticker-team-logo">NE</div></div>
+          </div>
+        </div>
+        <div class="ticker-card live">
+          <div class="ticker-sport">NBA <span class="ticker-status live">● Q4</span></div>
+          <div class="ticker-matchup">
+            <div class="ticker-team"><div class="ticker-team-logo">LAL</div><span class="ticker-team-name">Lakers</span></div>
+            <div class="ticker-score">112 – 108</div>
+            <div class="ticker-team"><span class="ticker-team-name">Warriors</span><div class="ticker-team-logo">GSW</div></div>
+          </div>
+        </div>
+        <div class="ticker-card upcoming">
+          <div class="ticker-sport">UFC 312 <span class="ticker-status upcoming">Sat 22:00</span></div>
+          <div class="ticker-matchup">
+            <div class="ticker-team"><div class="ticker-team-logo">MAK</div><span class="ticker-team-name">Makhachev</span></div>
+            <div class="ticker-score">vs</div>
+            <div class="ticker-team"><span class="ticker-team-name">Gamrot</span><div class="ticker-team-logo">GAM</div></div>
+          </div>
+        </div>
+        <div class="ticker-card live">
+          <div class="ticker-sport">Olympics <span class="ticker-status live">● Live</span></div>
+          <div class="ticker-matchup">
+            <div class="ticker-team"><span class="ticker-team-name">Men's Downhill</span></div>
+            <div class="ticker-score" style="font-size:14px;width:auto;">Run 2</div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ═══ FOOTBALL SECTION ═══ -->
+      <section class="section" data-sport="football">
+        <div class="section-header">
+          <h2 class="section-title"><span class="accent-bar"></span> Football</h2>
+          <a href="#" class="section-more">View all →</a>
+        </div>
+        <div class="video-grid">
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=VJHvtNFXZcU" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/VJHvtNFXZcU/maxresdefault.jpg" alt="Liverpool vs Man City">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">12:34</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Premier League</div>
+              <div class="video-title">Liverpool 1-2 Man City — Haaland 93rd Minute Winner!</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 4.2M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 120K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">M</div><span class="channel-name">Man City</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=4Rh62rguksI" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/4Rh62rguksI/maxresdefault.jpg" alt="Sunderland vs Liverpool">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">15:07</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Premier League</div>
+              <div class="video-title">Sunderland vs Liverpool — Full Match Highlights</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 1.8M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 48K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">N</div><span class="channel-name">NBC Sports</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=rYmbj-bQ_eg" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/rYmbj-bQ_eg/maxresdefault.jpg" alt="Champions League">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">08:45</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Champions League</div>
+              <div class="video-title">Champions League 2025/26 — Best Goals So Far</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 6.1M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 210K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">U</div><span class="channel-name">UEFA</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=Rtd5qKulpRc" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/Rtd5qKulpRc/maxresdefault.jpg" alt="La Liga">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">10:22</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">La Liga</div>
+              <div class="video-title">Celta Vigo 2-4 Barcelona — Lewandowski Hat-Trick</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 2.4M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 85K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">L</div><span class="channel-name">LaLiga</span></div>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+
+      <!-- ═══ BASKETBALL SECTION ═══ -->
+      <section class="section" data-sport="basketball">
+        <div class="section-header">
+          <h2 class="section-title"><span class="accent-bar"></span> Basketball</h2>
+          <a href="#" class="section-more">View all →</a>
+        </div>
+        <div class="video-grid">
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=2sfKtkr5r3E" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/2sfKtkr5r3E/maxresdefault.jpg" alt="NBA Top 10 Plays">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">2:34</span>
+              <div class="video-live-tag" style="background:var(--gold);color:black;">TRENDING</div>
+            </div>
+            <div class="video-info">
+              <div class="video-category">NBA</div>
+              <div class="video-title">NBA's Top 10 Plays of the Night — Insane Dunks & Clutch Shots</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 2.1M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 95K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">N</div><span class="channel-name">NBA</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=fcrO52NeETI" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/fcrO52NeETI/maxresdefault.jpg" alt="NBA Most Nasty Dunks 2025-26">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">60:00</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">NBA</div>
+              <div class="video-title">Most Nasty Dunks of the 2025-26 Season — 60 Min Compilation</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 5.6M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 210K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">N</div><span class="channel-name">NBA</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=JcJWZsmA8lQ" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/JcJWZsmA8lQ/maxresdefault.jpg" alt="NBA Top Dunks Week 3">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">20:40</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">NBA</div>
+              <div class="video-title">The Top Dunks of Week 3 — 2025-26 NBA Season</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 111K</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 5K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">N</div><span class="channel-name">NBA</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=CtbWw5ADUVU" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/CtbWw5ADUVU/maxresdefault.jpg" alt="EuroLeague Top 10">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">3:50</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">EuroLeague</div>
+              <div class="video-title">EuroLeague Top 10 Plays — Round 3 Best Moments</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 680K</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 29K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">E</div><span class="channel-name">EuroLeague</span></div>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+
+      <!-- ═══ COMBAT SPORTS SECTION ═══ -->
+      <section class="section" data-sport="combat">
+        <div class="section-header">
+          <h2 class="section-title"><span class="accent-bar"></span> Combat Sports</h2>
+          <a href="#" class="section-more">View all →</a>
+        </div>
+        <div class="video-grid">
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=LA2j4Du1PHs" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/LA2j4Du1PHs/maxresdefault.jpg" alt="UFC Best Knockouts 2025">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">43:12</span>
+              <div class="video-live-tag" style="background:var(--gold);color:black;">VIRAL</div>
+            </div>
+            <div class="video-info">
+              <div class="video-category">UFC</div>
+              <div class="video-title">Greatest Knockouts From 2025 So Far — Official UFC</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 6.8M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 280K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">U</div><span class="channel-name">UFC</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=VzvMuJ8qek8" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/VzvMuJ8qek8/maxresdefault.jpg" alt="UFC Knockouts">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">58:20</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">UFC</div>
+              <div class="video-title">These Knockouts Are Stuck In My Head — Full Compilation</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 4.2M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 150K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">U</div><span class="channel-name">UFC</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=-5Z041ALmyg" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/-5Z041ALmyg/maxresdefault.jpg" alt="Noche UFC">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">17:05</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">UFC</div>
+              <div class="video-title">Greatest Finishes From Noche UFC — Best of the Night</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 1.9M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 67K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">U</div><span class="channel-name">UFC</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=boxing+heavyweight+championship+2025+highlights" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/VzvMuJ8qek8/hqdefault.jpg" alt="Boxing">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">22:10</span>
+              <div class="video-premium-tag">Premium</div>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Boxing</div>
+              <div class="video-title">Heavyweight Championship — Full Fight Highlights</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 1.8M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 67K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">D</div><span class="channel-name">DAZN</span></div>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+
+      <!-- ═══ SUPER BOWL / NFL SECTION ═══ -->
+      <section class="section" data-sport="football">
+        <div class="section-header">
+          <h2 class="section-title"><span class="accent-bar"></span> Super Bowl LX</h2>
+          <a href="#" class="section-more">View all →</a>
+        </div>
+        <div class="video-grid">
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=ksG9O8PHXbI" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/ksG9O8PHXbI/maxresdefault.jpg" alt="Super Bowl LX Highlights">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">23:10</span>
+              <div class="video-live-tag" style="background:var(--gold);color:black;">MUST WATCH</div>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Super Bowl LX</div>
+              <div class="video-title">Seahawks vs Patriots — Full Game Highlights (29-13)</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 2.8M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 180K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">N</div><span class="channel-name">NFL</span></div>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+
+      <!-- ═══ F1 SECTION ═══ -->
+      <section class="section" data-sport="f1">
+        <div class="section-header">
+          <h2 class="section-title"><span class="accent-bar"></span> Formula 1</h2>
+          <a href="#" class="section-more">View all →</a>
+        </div>
+        <div class="video-grid">
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=ferrari+sf-26+reveal+hamilton+2026" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/S4s2OmLI_Fg/maxresdefault.jpg" alt="Ferrari SF-26">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">12:05</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Formula 1</div>
+              <div class="video-title">Ferrari SF-26 Reveal — First Look at Hamilton's New Car</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 2.8M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 150K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">F</div><span class="channel-name">FORMULA 1</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=hamilton+ferrari+fiorano+shakedown+sf-26" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/1SfIa9mtgjU/hqdefault.jpg" alt="Hamilton Ferrari Fiorano">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">4:33</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Formula 1</div>
+              <div class="video-title">Hamilton's First Laps in the SF-26 — Fiorano Shakedown</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 4.1M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 220K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">F</div><span class="channel-name">FORMULA 1</span></div>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+
+      <!-- ═══ OLYMPICS SECTION ═══ -->
+      <section class="section" data-sport="olympics">
+        <div class="section-header">
+          <h2 class="section-title"><span class="accent-bar"></span> Winter Olympics 2026</h2>
+          <a href="#" class="section-more">View all →</a>
+        </div>
+        <div class="video-grid">
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=winter+olympics+2026+opening+ceremony+highlights" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/ksG9O8PHXbI/hqdefault.jpg" alt="Olympics Opening Ceremony">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">28:40</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Olympics</div>
+              <div class="video-title">Milano Cortina 2026 Opening Ceremony — Full Highlights</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 12M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 580K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">O</div><span class="channel-name">Olympics</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=winter+olympics+2026+figure+skating+highlights" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/LA2j4Du1PHs/hqdefault.jpg" alt="Figure Skating">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">15:22</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Olympics</div>
+              <div class="video-title">Figure Skating Team Event — Stunning Performances</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 3.8M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 190K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">O</div><span class="channel-name">Olympics</span></div>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+
+      <!-- ═══ CRICKET SECTION ═══ -->
+      <section class="section" data-sport="cricket">
+        <div class="section-header">
+          <h2 class="section-title"><span class="accent-bar"></span> Cricket</h2>
+          <a href="#" class="section-more">View all →</a>
+        </div>
+        <div class="video-grid">
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=uzUcaSSXvIw" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/uzUcaSSXvIw/maxresdefault.jpg" alt="IPL 2025 Final">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">22:15</span>
+              <div class="video-live-tag" style="background:var(--gold);color:black;">MUST WATCH</div>
+            </div>
+            <div class="video-info">
+              <div class="video-category">IPL 2025</div>
+              <div class="video-title">RCB vs PBKS — IPL 2025 Final Full Highlights</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 18M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 820K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">I</div><span class="channel-name">IPL</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=1SfIa9mtgjU" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/1SfIa9mtgjU/maxresdefault.jpg" alt="RCB Wins IPL">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">8:42</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">IPL 2025</div>
+              <div class="video-title">Kohli's RCB End 18-Year Wait For Title — Celebration & Trophy Lift</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 12M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 650K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">N</div><span class="channel-name">N18</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=ICC+T20+World+Cup+2026+highlights+India" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/uzUcaSSXvIw/hqdefault.jpg" alt="T20 World Cup 2026">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">15:30</span>
+              <div class="video-live-tag"><div class="livedot"></div> LIVE</div>
+            </div>
+            <div class="video-info">
+              <div class="video-category">T20 World Cup 2026</div>
+              <div class="video-title">ICC T20 World Cup 2026 — Suryakumar's Heroics Save India</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 8.4M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 420K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">I</div><span class="channel-name">ICC</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=West+Indies+vs+England+T20+World+Cup+2026+highlights" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/MQ454x_cHss/maxresdefault.jpg" alt="WI vs ENG">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">12:18</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">T20 World Cup 2026</div>
+              <div class="video-title">West Indies Beat England by 30 Runs — Rutherford 76* Masterclass</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 3.1M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 95K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">I</div><span class="channel-name">ICC</span></div>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+
+      <!-- UPCOMING SCHEDULE -->
+      <section class="section" data-sport="all">
+        <div class="section-header">
+          <h2 class="section-title"><span class="accent-bar"></span> Upcoming Schedule</h2>
+          <a href="#" class="section-more">Full schedule →</a>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+          <table class="schedule-table">
+            <thead>
+              <tr>
+                <th>Match</th>
+                <th>League</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="schedule-match"><div class="schedule-badge">🏒</div>Short Track Speed Skating</div></td>
+                <td><span class="schedule-league">Olympics</span></td>
+                <td>Feb 14</td>
+                <td>19:30 CET</td>
+                <td><button class="schedule-btn">Remind Me</button></td>
+              </tr>
+              <tr>
+                <td><div class="schedule-match"><div class="schedule-badge">🏏</div>India vs Pakistan</div></td>
+                <td><span class="schedule-league">T20 World Cup</span></td>
+                <td>Feb 15</td>
+                <td>14:00 IST</td>
+                <td><button class="schedule-btn">Remind Me</button></td>
+              </tr>
+              <tr>
+                <td><div class="schedule-match"><div class="schedule-badge">⛷️</div>Men's 10km Cross-Country</div></td>
+                <td><span class="schedule-league">Olympics</span></td>
+                <td>Feb 15</td>
+                <td>12:00 CET</td>
+                <td><button class="schedule-btn">Remind Me</button></td>
+              </tr>
+              <tr>
+                <td><div class="schedule-match"><div class="schedule-badge">⚽</div>Benfica vs Real Madrid</div></td>
+                <td><span class="schedule-league">Champions League</span></td>
+                <td>Feb 17</td>
+                <td>20:00 CET</td>
+                <td><button class="schedule-btn">Remind Me</button></td>
+              </tr>
+              <tr>
+                <td><div class="schedule-match"><div class="schedule-badge">⚽</div>Monaco vs PSG</div></td>
+                <td><span class="schedule-league">Champions League</span></td>
+                <td>Feb 17</td>
+                <td>20:00 CET</td>
+                <td><button class="schedule-btn">Remind Me</button></td>
+              </tr>
+              <tr>
+                <td><div class="schedule-match"><div class="schedule-badge">⚽</div>Galatasaray vs Juventus</div></td>
+                <td><span class="schedule-league">Champions League</span></td>
+                <td>Feb 17</td>
+                <td>17:45 CET</td>
+                <td><button class="schedule-btn">Remind Me</button></td>
+              </tr>
+              <tr>
+                <td><div class="schedule-match"><div class="schedule-badge">⚽</div>Dortmund vs Atalanta</div></td>
+                <td><span class="schedule-league">Champions League</span></td>
+                <td>Feb 17</td>
+                <td>20:00 CET</td>
+                <td><button class="schedule-btn">Remind Me</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../src/components/app.js"></script>
+
+
+  <!-- ════════════════════════════════════════
+       FOOTER
+       ════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="logo-icon"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
+          <div class="logo-text">ARENA<span>.</span></div>
+        </div>
+        <p class="footer-tagline">Your destination for high quality streaming of movies, education, sports, TV shows and live events.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="Twitter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg></a>
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+          <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg></a>
+        </div>
+      </div>
+
+      <div class="footer-links-group">
+        <h4 class="footer-heading">Information</h4>
+        <a href="info.html#about" class="footer-link">About Us</a>
+        <a href="info.html#contact" class="footer-link">Contact Us</a>
+        <a href="info.html#terms" class="footer-link">Terms of Service</a>
+        <a href="info.html#privacy" class="footer-link">Privacy Policy</a>
+        <a href="info.html#refund" class="footer-link">Refund & Cancellation Policy</a>
+        <a href="info.html#community" class="footer-link">Community Guidelines</a>
+        <a href="info.html#playback" class="footer-link">Playback Policy</a>
+        <a href="info.html#risk" class="footer-link">Risk Policy</a>
+        <a href="info.html#legal" class="footer-link">Legal & Compliance</a>
+      </div>
+
+      <div class="footer-links-group">
+        <h4 class="footer-heading">Categories</h4>
+        <a href="#" class="footer-link">Football</a>
+        <a href="#" class="footer-link">Basketball</a>
+        <a href="#" class="footer-link">Cricket</a>
+        <a href="#" class="footer-link">MMA / Boxing</a>
+        <a href="#" class="footer-link">Formula 1</a>
+        <a href="#" class="footer-link">Olympics</a>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      <p>Copyright &copy; 2026 Arena Sports. All rights reserved.</p>
+    </div>
+  </footer>
+
+</body>
+</html>

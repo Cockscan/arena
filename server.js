@@ -197,6 +197,11 @@ app.post('/api/signout', (req, res) => {
   return res.json({ ok: true });
 });
 
+// ── Root redirect ──
+app.get('/', (req, res) => {
+  res.redirect('/public/index.html');
+});
+
 // ── Catch-all: serve index.html for unmatched routes ──
 app.get('/public/*', (req, res) => {
   const filePath = path.join(__dirname, req.path);

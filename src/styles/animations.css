@@ -474,6 +474,13 @@
   transform: translateY(0);
 }
 
+.auth-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 /* Shake animation for errors */
 .auth-submit-btn.shake {
   animation: shake 0.4s ease;

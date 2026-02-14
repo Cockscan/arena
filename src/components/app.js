@@ -84,7 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHeaderForAuth();
       }
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Signup fetch error:', err);
       return { ok: false, error: 'Network error. Please try again.' };
     }
   }
@@ -106,7 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateHeaderForAuth();
       }
       return data;
-    } catch {
+    } catch (err) {
+      console.error('Signin fetch error:', err);
       return { ok: false, error: 'Network error. Please try again.' };
     }
   }
@@ -115,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function clearSession() {
     try {
       await fetch('/api/signout', { method: 'POST', credentials: 'include' });
-    } catch { /* ignore */ }
+    } catch (err) { console.error('Signout error:', err); }
     currentUser = null;
     updateHeaderForAuth();
   }
@@ -293,18 +295,33 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const form = e.target;
       const errEl = form.querySelector('.auth-error');
+      const submitBtn = form.querySelector('.auth-submit-btn');
       const identifier = form.identifier.value;
       const password = form.password.value;
 
-      const result = await signIn(identifier, password);
-      if (result.ok) {
-        closeAuthModal(overlay);
-        showToast(`Welcome back, ${getSession().username}!`, 'success');
-      } else {
-        errEl.textContent = result.error;
+      // Loading state
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Signing in...';
+      errEl.style.display = 'none';
+
+      try {
+        const result = await signIn(identifier, password);
+        if (result.ok) {
+          closeAuthModal(overlay);
+          showToast(`Welcome back, ${getSession().username}!`, 'success');
+        } else {
+          errEl.textContent = result.error || 'Something went wrong';
+          errEl.style.display = 'block';
+          submitBtn.classList.add('shake');
+          setTimeout(() => submitBtn.classList.remove('shake'), 500);
+        }
+      } catch (err) {
+        console.error('Sign in error:', err);
+        errEl.textContent = 'Connection error. Please try again.';
         errEl.style.display = 'block';
-        form.querySelector('.auth-submit-btn').classList.add('shake');
-        setTimeout(() => form.querySelector('.auth-submit-btn').classList.remove('shake'), 500);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In';
       }
     });
 
@@ -313,20 +330,35 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const form = e.target;
       const errEl = form.querySelector('.auth-error');
+      const submitBtn = form.querySelector('.auth-submit-btn');
       const username = form.username.value;
       const email = form.email.value;
       const password = form.password.value;
       const confirmPassword = form.confirmPassword.value;
 
-      const result = await signUp(username, email, password, confirmPassword);
-      if (result.ok) {
-        closeAuthModal(overlay);
-        showToast(`Welcome to Arena, ${getSession().username}!`, 'success');
-      } else {
-        errEl.textContent = result.error;
+      // Loading state
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating account...';
+      errEl.style.display = 'none';
+
+      try {
+        const result = await signUp(username, email, password, confirmPassword);
+        if (result.ok) {
+          closeAuthModal(overlay);
+          showToast(`Welcome to Arena, ${getSession().username}!`, 'success');
+        } else {
+          errEl.textContent = result.error || 'Something went wrong';
+          errEl.style.display = 'block';
+          submitBtn.classList.add('shake');
+          setTimeout(() => submitBtn.classList.remove('shake'), 500);
+        }
+      } catch (err) {
+        console.error('Sign up error:', err);
+        errEl.textContent = 'Connection error. Please try again.';
         errEl.style.display = 'block';
-        form.querySelector('.auth-submit-btn').classList.add('shake');
-        setTimeout(() => form.querySelector('.auth-submit-btn').classList.remove('shake'), 500);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Account';
       }
     });
 
@@ -704,10 +736,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Ticker Score Simulation ──
   const tickerData = [
-    { sport: 'Olympics', status: 'live', label: '● Live', home: 'Finland', away: 'Sweden', homeCode: 'FIN', awayCode: 'SWE', homeScore: 2, awayScore: 1, maxScore: 6 },
-    { sport: 'NFL', status: 'finished', label: 'Final', home: 'Seahawks', away: 'Patriots', homeCode: 'SEA', awayCode: 'NE', homeScore: 29, awayScore: 13, maxScore: 0 },
+    { sport: 'IPL', status: 'live', label: '● Live', home: 'Chennai', away: 'Mumbai', homeCode: 'CSK', awayCode: 'MI', homeScore: 182, awayScore: 156, maxScore: 220 },
+    { sport: 'PKL', status: 'live', label: '● 2nd Half', home: 'Patna', away: 'Jaipur', homeCode: 'PAT', awayCode: 'JAI', homeScore: 28, awayScore: 24, maxScore: 50 },
+    { sport: 'ISL', status: 'live', label: '● 72\'', home: 'Kerala', away: 'Goa', homeCode: 'KER', awayCode: 'GOA', homeScore: 2, awayScore: 1, maxScore: 5 },
+    { sport: 'Hockey', status: 'finished', label: 'Final', home: 'India', away: 'Korea', homeCode: 'IND', awayCode: 'KOR', homeScore: 4, awayScore: 1, maxScore: 0 },
     { sport: 'NBA', status: 'live', label: '● Q4', home: 'Lakers', away: 'Warriors', homeCode: 'LAL', awayCode: 'GSW', homeScore: 112, awayScore: 108, maxScore: 140 },
-    { sport: 'UFC 312', status: 'upcoming', label: 'Sat 22:00', home: 'Makhachev', away: 'Gamrot', homeCode: 'MAK', awayCode: 'GAM', homeScore: 0, awayScore: 0, maxScore: 0 },
+    { sport: 'Badminton', status: 'upcoming', label: '16:00 IST', home: 'Sindhu', away: 'Tai Tzu', homeCode: 'SIN', awayCode: 'TAI', homeScore: 0, awayScore: 0, maxScore: 0 },
     { sport: 'Olympics', status: 'live', label: '● Live', home: "Men's Downhill", away: '', homeCode: '', awayCode: '', homeScore: 0, awayScore: 0, maxScore: 0, special: 'Run 2' }
   ];
 
@@ -798,10 +832,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Only update live matches
       if (match.status === 'live' && !match.special) {
-        // Small chance of score change
+        // Small chance of score change — different increments per sport
         if (Math.random() < 0.12) {
-          if (Math.random() < 0.5) match.homeScore = Math.min(match.maxScore, match.homeScore + (match.sport === 'NBA' ? Math.floor(Math.random()*3)+1 : 1));
-          else match.awayScore = Math.min(match.maxScore, match.awayScore + (match.sport === 'NBA' ? Math.floor(Math.random()*3)+1 : 1));
+          let inc = 1;
+          if (match.sport === 'NBA') inc = Math.floor(Math.random()*3)+1;
+          else if (match.sport === 'IPL') inc = Math.floor(Math.random()*6)+1;
+          else if (match.sport === 'PKL') inc = Math.floor(Math.random()*2)+1;
+
+          if (Math.random() < 0.5) match.homeScore = Math.min(match.maxScore, match.homeScore + inc);
+          else match.awayScore = Math.min(match.maxScore, match.awayScore + inc);
         }
 
         const scoreEl = cards[i].querySelector('.ticker-score');

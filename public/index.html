@@ -82,6 +82,22 @@
           <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="22"/><path d="M4.93 4.93l14.14 14.14"/></svg>
           Cricket
         </a>
+        <a class="sidebar-item" data-filter="kabaddi">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><path d="M12 8v6M8 20l4-6 4 6"/><line x1="6" y1="12" x2="18" y2="12"/></svg>
+          Kabaddi
+        </a>
+        <a class="sidebar-item" data-filter="badminton">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="16" x2="12" y2="20"/></svg>
+          Badminton
+        </a>
+        <a class="sidebar-item" data-filter="hockey">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20 L12 4 L14 10 L20 10"/><circle cx="18" cy="18" r="2"/></svg>
+          Hockey
+        </a>
+        <a class="sidebar-item" data-filter="isl">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+          ISL Football
+        </a>
       </div>
 
       <div class="sidebar-divider"></div>
@@ -151,19 +167,35 @@
       <!-- LIVE TICKER -->
       <div class="live-ticker">
         <div class="ticker-card live">
-          <div class="ticker-sport">Olympics <span class="ticker-status live">● Live</span></div>
+          <div class="ticker-sport">IPL <span class="ticker-status live">● Live</span></div>
           <div class="ticker-matchup">
-            <div class="ticker-team"><div class="ticker-team-logo">FIN</div><span class="ticker-team-name">Finland</span></div>
+            <div class="ticker-team"><div class="ticker-team-logo">CSK</div><span class="ticker-team-name">Chennai</span></div>
+            <div class="ticker-score">182 – 156</div>
+            <div class="ticker-team"><span class="ticker-team-name">Mumbai</span><div class="ticker-team-logo">MI</div></div>
+          </div>
+        </div>
+        <div class="ticker-card live">
+          <div class="ticker-sport">PKL <span class="ticker-status live">● 2nd Half</span></div>
+          <div class="ticker-matchup">
+            <div class="ticker-team"><div class="ticker-team-logo">PAT</div><span class="ticker-team-name">Patna</span></div>
+            <div class="ticker-score">28 – 24</div>
+            <div class="ticker-team"><span class="ticker-team-name">Jaipur</span><div class="ticker-team-logo">JAI</div></div>
+          </div>
+        </div>
+        <div class="ticker-card live">
+          <div class="ticker-sport">ISL <span class="ticker-status live">● 72'</span></div>
+          <div class="ticker-matchup">
+            <div class="ticker-team"><div class="ticker-team-logo">KER</div><span class="ticker-team-name">Kerala</span></div>
             <div class="ticker-score">2 – 1</div>
-            <div class="ticker-team"><span class="ticker-team-name">Sweden</span><div class="ticker-team-logo">SWE</div></div>
+            <div class="ticker-team"><span class="ticker-team-name">Goa</span><div class="ticker-team-logo">GOA</div></div>
           </div>
         </div>
         <div class="ticker-card finished">
-          <div class="ticker-sport">NFL <span class="ticker-status finished">Final</span></div>
+          <div class="ticker-sport">Hockey <span class="ticker-status finished">Final</span></div>
           <div class="ticker-matchup">
-            <div class="ticker-team"><div class="ticker-team-logo">SEA</div><span class="ticker-team-name">Seahawks</span></div>
-            <div class="ticker-score">29 – 13</div>
-            <div class="ticker-team"><span class="ticker-team-name">Patriots</span><div class="ticker-team-logo">NE</div></div>
+            <div class="ticker-team"><div class="ticker-team-logo">IND</div><span class="ticker-team-name">India</span></div>
+            <div class="ticker-score">4 – 1</div>
+            <div class="ticker-team"><span class="ticker-team-name">Korea</span><div class="ticker-team-logo">KOR</div></div>
           </div>
         </div>
         <div class="ticker-card live">
@@ -175,11 +207,11 @@
           </div>
         </div>
         <div class="ticker-card upcoming">
-          <div class="ticker-sport">UFC 312 <span class="ticker-status upcoming">Sat 22:00</span></div>
+          <div class="ticker-sport">Badminton <span class="ticker-status upcoming">16:00 IST</span></div>
           <div class="ticker-matchup">
-            <div class="ticker-team"><div class="ticker-team-logo">MAK</div><span class="ticker-team-name">Makhachev</span></div>
+            <div class="ticker-team"><div class="ticker-team-logo">SIN</div><span class="ticker-team-name">Sindhu</span></div>
             <div class="ticker-score">vs</div>
-            <div class="ticker-team"><span class="ticker-team-name">Gamrot</span><div class="ticker-team-logo">GAM</div></div>
+            <div class="ticker-team"><span class="ticker-team-name">Tai Tzu</span><div class="ticker-team-logo">TAI</div></div>
           </div>
         </div>
         <div class="ticker-card live">
@@ -639,6 +671,264 @@
       </section>
 
 
+      <!-- ═══ KABADDI SECTION ═══ -->
+      <section class="section" data-sport="kabaddi">
+        <div class="section-header">
+          <h2 class="section-title"><span class="accent-bar"></span> Kabaddi</h2>
+          <a href="#" class="section-more">View all →</a>
+        </div>
+        <div class="video-grid">
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=PV1YNd_asP4" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/PV1YNd_asP4/maxresdefault.jpg" alt="U Mumba vs Bengaluru Bulls">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">26:40</span>
+              <div class="video-live-tag" style="background:var(--gold);color:black;">TRENDING</div>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Pro Kabaddi S12</div>
+              <div class="video-title">U Mumba vs Bengaluru Bulls — PKL Season 12 Full Highlights</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 4.2M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 180K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">P</div><span class="channel-name">PKL</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=frTDzB4Il0Q" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/frTDzB4Il0Q/maxresdefault.jpg" alt="Bengaluru Bulls vs Dabang Delhi">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">24:15</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Pro Kabaddi S12</div>
+              <div class="video-title">Bengaluru Bulls vs Dabang Delhi K.C. — Pawan Sehrawat's Raid Masterclass</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 3.1M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 145K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">P</div><span class="channel-name">PKL</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=pro+kabaddi+season+12+final+highlights" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/PV1YNd_asP4/hqdefault.jpg" alt="PKL Season 12 Final">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">32:10</span>
+              <div class="video-premium-tag">Premium</div>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Pro Kabaddi S12</div>
+              <div class="video-title">PKL Season 12 Grand Final — Dabang Delhi vs Puneri Paltan</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 6.8M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 310K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">P</div><span class="channel-name">PKL</span></div>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+
+      <!-- ═══ BADMINTON SECTION ═══ -->
+      <section class="section" data-sport="badminton">
+        <div class="section-header">
+          <h2 class="section-title"><span class="accent-bar"></span> Badminton</h2>
+          <a href="#" class="section-more">View all →</a>
+        </div>
+        <div class="video-grid">
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=PV+Sindhu+India+Open+2026+badminton+highlights" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/i_grpQFgqNA/maxresdefault.jpg" alt="PV Sindhu India Open">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">18:24</span>
+              <div class="video-live-tag" style="background:var(--gold);color:black;">FEATURED</div>
+            </div>
+            <div class="video-info">
+              <div class="video-category">India Open 2026</div>
+              <div class="video-title">PV Sindhu at India Open 2026 — Can She Reclaim Her Crown?</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 5.6M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 280K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">B</div><span class="channel-name">BWF</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=Lakshya+Sen+All+England+Open+2026+badminton" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/dG1qN5E0gTk/maxresdefault.jpg" alt="Lakshya Sen">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">15:08</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">All England Open</div>
+              <div class="video-title">Lakshya Sen's Electric Rally — All England Open 2026 Highlights</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 3.8M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 190K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">B</div><span class="channel-name">BWF</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=Satwik+Chirag+doubles+badminton+India+2026" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/i_grpQFgqNA/hqdefault.jpg" alt="Satwik-Chirag Doubles">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">12:45</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">BWF Tour</div>
+              <div class="video-title">Satwik-Chirag Dominate — India's World No. 1 Doubles Pair in Action</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 2.4M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 120K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">B</div><span class="channel-name">BWF</span></div>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+
+      <!-- ═══ HOCKEY INDIA SECTION ═══ -->
+      <section class="section" data-sport="hockey">
+        <div class="section-header">
+          <h2 class="section-title"><span class="accent-bar"></span> Hockey</h2>
+          <a href="#" class="section-more">View all →</a>
+        </div>
+        <div class="video-grid">
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=KvP8c8nd-4Y" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/KvP8c8nd-4Y/maxresdefault.jpg" alt="India vs Korea Asia Cup Final">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">18:30</span>
+              <div class="video-live-tag" style="background:var(--gold);color:black;">MUST WATCH</div>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Asia Cup 2025</div>
+              <div class="video-title">India 4-1 Korea — Asia Cup Final Highlights | World Cup 2026 Qualified!</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 8.2M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 520K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">H</div><span class="channel-name">Hockey India</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/watch?v=5jbj-RSZp_s" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/5jbj-RSZp_s/maxresdefault.jpg" alt="India Asia Cup celebration">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">10:15</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Asia Cup 2025</div>
+              <div class="video-title">India Wins Hockey Asia Cup After 8-Year Wait — Trophy Celebration</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 5.1M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 340K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">H</div><span class="channel-name">Hockey India</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=Hockey+India+League+2026+final+highlights+Kalinga+Lancers" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/KvP8c8nd-4Y/hqdefault.jpg" alt="HIL 2026 Final">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">22:40</span>
+              <div class="video-premium-tag">Premium</div>
+            </div>
+            <div class="video-info">
+              <div class="video-category">Hockey India League</div>
+              <div class="video-title">Kalinga Lancers 3-2 Ranchi Royals — HIL 2026 Grand Final</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 2.8M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 165K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">H</div><span class="channel-name">HIL</span></div>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+
+      <!-- ═══ ISL FOOTBALL SECTION ═══ -->
+      <section class="section" data-sport="isl">
+        <div class="section-header">
+          <h2 class="section-title"><span class="accent-bar"></span> ISL Football</h2>
+          <a href="#" class="section-more">View all →</a>
+        </div>
+        <div class="video-grid">
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=Mohun+Bagan+ISL+2025-26+highlights" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/5yz0SpNDi64/maxresdefault.jpg" alt="Mohun Bagan ISL">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">12:30</span>
+              <div class="video-live-tag" style="background:var(--gold);color:black;">TRENDING</div>
+            </div>
+            <div class="video-info">
+              <div class="video-category">ISL 2025-26</div>
+              <div class="video-title">Mohun Bagan Super Giant — ISL Season Highlights | Top Goals & Saves</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 2.1M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 95K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">I</div><span class="channel-name">ISL</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=Kerala+Blasters+FC+Goa+ISL+2025-26+highlights" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/5yz0SpNDi64/hqdefault.jpg" alt="Kerala Blasters vs FC Goa">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">10:45</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">ISL 2025-26</div>
+              <div class="video-title">Kerala Blasters vs FC Goa — Jawaharlal Nehru Stadium on Fire!</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 1.8M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 78K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">I</div><span class="channel-name">ISL</span></div>
+            </div>
+          </a>
+
+          <a class="video-card" href="https://www.youtube.com/results?search_query=Bengaluru+FC+ISL+2025-26+highlights" target="_blank" rel="noopener">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/5yz0SpNDi64/sddefault.jpg" alt="Bengaluru FC">
+              <div class="video-thumb-overlay"><div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+              <span class="video-duration">14:20</span>
+            </div>
+            <div class="video-info">
+              <div class="video-category">ISL 2025-26</div>
+              <div class="video-title">Bengaluru FC's Title Challenge — Best Goals of the Season</div>
+              <div class="video-meta">
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 1.2M</span>
+                <span class="video-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> 62K</span>
+              </div>
+              <div class="video-channel"><div class="channel-avatar">I</div><span class="channel-name">ISL</span></div>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+
       <!-- UPCOMING SCHEDULE -->
       <section class="section" data-sport="all">
         <div class="section-header">
@@ -658,13 +948,6 @@
             </thead>
             <tbody>
               <tr>
-                <td><div class="schedule-match"><div class="schedule-badge">🏒</div>Short Track Speed Skating</div></td>
-                <td><span class="schedule-league">Olympics</span></td>
-                <td>Feb 14</td>
-                <td>19:30 CET</td>
-                <td><button class="schedule-btn">Remind Me</button></td>
-              </tr>
-              <tr>
                 <td><div class="schedule-match"><div class="schedule-badge">🏏</div>India vs Pakistan</div></td>
                 <td><span class="schedule-league">T20 World Cup</span></td>
                 <td>Feb 15</td>
@@ -672,17 +955,52 @@
                 <td><button class="schedule-btn">Remind Me</button></td>
               </tr>
               <tr>
-                <td><div class="schedule-match"><div class="schedule-badge">⛷️</div>Men's 10km Cross-Country</div></td>
-                <td><span class="schedule-league">Olympics</span></td>
+                <td><div class="schedule-match"><div class="schedule-badge">🏑</div>India vs Australia</div></td>
+                <td><span class="schedule-league">Hockey World Cup 2026</span></td>
                 <td>Feb 15</td>
-                <td>12:00 CET</td>
+                <td>18:30 IST</td>
+                <td><button class="schedule-btn">Remind Me</button></td>
+              </tr>
+              <tr>
+                <td><div class="schedule-match"><div class="schedule-badge">🏸</div>PV Sindhu vs Tai Tzu-Ying</div></td>
+                <td><span class="schedule-league">All England Open</span></td>
+                <td>Mar 3</td>
+                <td>16:00 IST</td>
+                <td><button class="schedule-btn">Remind Me</button></td>
+              </tr>
+              <tr>
+                <td><div class="schedule-match"><div class="schedule-badge">🤼</div>Patna Pirates vs Haryana Steelers</div></td>
+                <td><span class="schedule-league">Pro Kabaddi S13</span></td>
+                <td>Feb 16</td>
+                <td>20:00 IST</td>
+                <td><button class="schedule-btn">Remind Me</button></td>
+              </tr>
+              <tr>
+                <td><div class="schedule-match"><div class="schedule-badge">⚽</div>Mohun Bagan vs Kerala Blasters</div></td>
+                <td><span class="schedule-league">ISL 2025-26</span></td>
+                <td>Feb 16</td>
+                <td>19:30 IST</td>
+                <td><button class="schedule-btn">Remind Me</button></td>
+              </tr>
+              <tr>
+                <td><div class="schedule-match"><div class="schedule-badge">🏏</div>CSK vs MI</div></td>
+                <td><span class="schedule-league">IPL 2026</span></td>
+                <td>Mar 22</td>
+                <td>19:30 IST</td>
                 <td><button class="schedule-btn">Remind Me</button></td>
               </tr>
               <tr>
                 <td><div class="schedule-match"><div class="schedule-badge">⚽</div>Benfica vs Real Madrid</div></td>
                 <td><span class="schedule-league">Champions League</span></td>
                 <td>Feb 17</td>
-                <td>20:00 CET</td>
+                <td>01:30 IST</td>
+                <td><button class="schedule-btn">Remind Me</button></td>
+              </tr>
+              <tr>
+                <td><div class="schedule-match"><div class="schedule-badge">🏒</div>Short Track Speed Skating</div></td>
+                <td><span class="schedule-league">Olympics</span></td>
+                <td>Feb 14</td>
+                <td>00:00 IST</td>
                 <td><button class="schedule-btn">Remind Me</button></td>
               </tr>
               <tr>
@@ -752,12 +1070,15 @@
 
       <div class="footer-links-group">
         <h4 class="footer-heading">Categories</h4>
+        <a href="#" class="footer-link">Cricket</a>
+        <a href="#" class="footer-link">Kabaddi</a>
+        <a href="#" class="footer-link">Badminton</a>
+        <a href="#" class="footer-link">Hockey</a>
+        <a href="#" class="footer-link">ISL Football</a>
         <a href="#" class="footer-link">Football</a>
         <a href="#" class="footer-link">Basketball</a>
-        <a href="#" class="footer-link">Cricket</a>
         <a href="#" class="footer-link">MMA / Boxing</a>
         <a href="#" class="footer-link">Formula 1</a>
-        <a href="#" class="footer-link">Olympics</a>
       </div>
 
     </div>

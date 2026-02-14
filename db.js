@@ -28,8 +28,22 @@ async function initDB() {
           username VARCHAR(50) UNIQUE NOT NULL,
           email VARCHAR(255) UNIQUE NOT NULL,
           password_hash VARCHAR(255) NOT NULL,
+          payment_status VARCHAR(20) DEFAULT 'pending',
+          payment_id VARCHAR(255),
+          payment_amount INTEGER DEFAULT 0,
+          paid_at TIMESTAMP WITH TIME ZONE,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
+      `);
+
+      // Add payment columns if they don't exist (for existing databases)
+      await client.query(`
+        DO $$ BEGIN
+          ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_status VARCHAR(20) DEFAULT 'pending';
+          ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_id VARCHAR(255);
+          ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_amount INTEGER DEFAULT 0;
+          ALTER TABLE users ADD COLUMN IF NOT EXISTS paid_at TIMESTAMP WITH TIME ZONE;
+        END $$;
       `);
 
       // Create indexes for fast lookups

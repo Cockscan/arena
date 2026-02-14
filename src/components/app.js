@@ -137,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
       signinBtn.innerHTML = `
         <span class="header-user-avatar">${session.username.charAt(0).toUpperCase()}</span>
         <span class="header-username">${session.username}</span>
+        ${session.payment_status === 'paid' ? '<span class="premium-badge">PRO</span>' : ''}
         <svg class="header-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       `;
 
@@ -151,11 +152,19 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="dropdown-header">
           <div class="dropdown-avatar">${session.username.charAt(0).toUpperCase()}</div>
           <div>
-            <div class="dropdown-name">${session.username}</div>
+            <div class="dropdown-name">${session.username} ${session.payment_status === 'paid' ? '<span class="premium-badge small">PRO</span>' : ''}</div>
             <div class="dropdown-email">${session.email}</div>
+            ${session.payment_status !== 'paid' ? '<div class="dropdown-plan-status">Free Plan</div>' : '<div class="dropdown-plan-status paid">Premium Active</div>'}
           </div>
         </div>
         <div class="dropdown-divider"></div>
+        ${session.payment_status !== 'paid' ? `
+        <a class="dropdown-item dropdown-upgrade" data-action="upgrade">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Upgrade to Premium — ₹99
+        </a>
+        <div class="dropdown-divider"></div>
+        ` : ''}
         <a class="dropdown-item" data-action="profile">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           My Profile
@@ -195,6 +204,9 @@ document.addEventListener('DOMContentLoaded', () => {
             await clearSession();
             showToast('Signed out successfully');
             dropdown.classList.remove('show');
+          } else if (action === 'upgrade') {
+            dropdown.classList.remove('show');
+            openPaymentModal();
           } else {
             showToast(`${item.textContent.trim()} — coming soon`);
           }
@@ -308,7 +320,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await signIn(identifier, password);
         if (result.ok) {
           closeAuthModal(overlay);
-          showToast(`Welcome back, ${getSession().username}!`, 'success');
+          // Refresh session to get latest payment_status
+          await fetchSession();
+          if (!isPaid()) {
+            showToast(`Welcome back, ${getSession().username}! Complete payment for premium.`, 'success');
+            setTimeout(() => openPaymentModal(), 400);
+          } else {
+            showToast(`Welcome back, ${getSession().username}!`, 'success');
+          }
         } else {
           errEl.textContent = result.error || 'Something went wrong';
           errEl.style.display = 'block';
@@ -345,7 +364,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await signUp(username, email, password, confirmPassword);
         if (result.ok) {
           closeAuthModal(overlay);
-          showToast(`Welcome to Arena, ${getSession().username}!`, 'success');
+          showToast(`Account created! Complete payment to unlock premium.`, 'success');
+          // Open payment modal after successful signup
+          setTimeout(() => openPaymentModal(), 400);
         } else {
           errEl.textContent = result.error || 'Something went wrong';
           errEl.style.display = 'block';
@@ -384,16 +405,231 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.addEventListener('transitionend', () => overlay.remove());
   }
 
+  // ══════════════════════════════════════════
+  //  PAYMENT HELPERS
+  // ══════════════════════════════════════════
+
+  function isPaid() {
+    return currentUser && currentUser.payment_status === 'paid';
+  }
+
+  // ══════════════════════════════════════════
+  //  PAYMENT MODAL (Razorpay UPI)
+  // ══════════════════════════════════════════
+  async function openPaymentModal() {
+    if (!isLoggedIn()) { openAuthModal('signup'); return; }
+    if (isPaid()) { showToast('You already have premium access!', 'success'); return; }
+
+    // Remove existing payment overlay
+    const existing = document.querySelector('.payment-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'auth-overlay payment-overlay';
+    overlay.innerHTML = `
+      <div class="auth-modal payment-modal">
+        <button class="auth-close" aria-label="Close">&times;</button>
+
+        <div class="payment-header">
+          <div class="payment-icon">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#85c742" stroke-width="2">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+              <line x1="1" y1="10" x2="23" y2="10"/>
+            </svg>
+          </div>
+          <h2 class="payment-title">Unlock Arena Sports Premium</h2>
+          <p class="payment-subtitle">Get unlimited access to all live streams, highlights, and exclusive content</p>
+        </div>
+
+        <div class="payment-plan">
+          <div class="plan-badge">BEST VALUE</div>
+          <div class="plan-price">
+            <span class="plan-currency">₹</span>
+            <span class="plan-amount">99</span>
+            <span class="plan-period">/ one-time</span>
+          </div>
+          <ul class="plan-features">
+            <li>✓ All live cricket, kabaddi, football & more</li>
+            <li>✓ HD quality streaming</li>
+            <li>✓ No ads on premium content</li>
+            <li>✓ Access on all devices</li>
+          </ul>
+        </div>
+
+        <div class="payment-methods">
+          <span class="payment-methods-label">Pay securely via</span>
+          <div class="payment-badges">
+            <span class="pay-badge">UPI</span>
+            <span class="pay-badge">Cards</span>
+            <span class="pay-badge">Net Banking</span>
+            <span class="pay-badge">Wallets</span>
+          </div>
+        </div>
+
+        <button class="payment-btn" id="pay-now-btn">
+          <span class="payment-btn-text">Pay ₹99 Now</span>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+
+        <p class="payment-disclaimer">
+          Secured by Razorpay. UPI, Cards, Net Banking accepted.<br>
+          <a href="info.html#refund" target="_blank">Refund Policy</a>
+        </p>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    // Close handlers
+    overlay.querySelector('.auth-close').addEventListener('click', () => {
+      overlay.classList.remove('show');
+      overlay.addEventListener('transitionend', () => overlay.remove());
+    });
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        overlay.classList.remove('show');
+        overlay.addEventListener('transitionend', () => overlay.remove());
+      }
+    });
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') {
+        overlay.classList.remove('show');
+        overlay.addEventListener('transitionend', () => overlay.remove());
+        document.removeEventListener('keydown', esc);
+      }
+    });
+
+    // Animate in
+    requestAnimationFrame(() => overlay.classList.add('show'));
+
+    // Fetch payment config
+    let config;
+    try {
+      const res = await fetch('/api/payment/config');
+      config = await res.json();
+    } catch (err) {
+      console.error('Payment config error:', err);
+      showToast('Payment system unavailable. Please try later.', 'info');
+      return;
+    }
+
+    // Update displayed amount dynamically
+    const amountRupees = Math.round(config.amount / 100);
+    overlay.querySelector('.plan-amount').textContent = amountRupees;
+    overlay.querySelector('.payment-btn-text').textContent = `Pay ₹${amountRupees} Now`;
+
+    // Pay button
+    overlay.querySelector('#pay-now-btn').addEventListener('click', async () => {
+      if (!config.enabled) {
+        showToast('Payment gateway not configured yet. Contact support.', 'info');
+        return;
+      }
+
+      const payBtn = overlay.querySelector('#pay-now-btn');
+      payBtn.disabled = true;
+      payBtn.querySelector('.payment-btn-text').textContent = 'Creating order...';
+
+      try {
+        // Create order on server
+        const orderRes = await fetch('/api/payment/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        const orderData = await orderRes.json();
+
+        if (!orderData.ok) {
+          showToast(orderData.error || 'Could not create order', 'info');
+          payBtn.disabled = false;
+          payBtn.querySelector('.payment-btn-text').textContent = `Pay ₹${amountRupees} Now`;
+          return;
+        }
+
+        // Open Razorpay Checkout
+        const options = {
+          key: config.key_id,
+          amount: orderData.order.amount,
+          currency: orderData.order.currency,
+          name: 'Arena Sports',
+          description: 'Premium Access',
+          order_id: orderData.order.id,
+          prefill: {
+            name: currentUser.username,
+            email: currentUser.email
+          },
+          theme: { color: '#85c742' },
+          method: { upi: true, card: true, netbanking: true, wallet: true },
+          handler: async function(response) {
+            // Verify payment on server
+            try {
+              const verifyRes = await fetch('/api/payment/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature
+                })
+              });
+              const verifyData = await verifyRes.json();
+
+              if (verifyData.ok) {
+                // Update local user state
+                currentUser.payment_status = 'paid';
+                updateHeaderForAuth();
+
+                // Close payment modal with success
+                overlay.classList.remove('show');
+                overlay.addEventListener('transitionend', () => overlay.remove());
+
+                showToast('🎉 Payment successful! Welcome to Arena Sports Premium!', 'success');
+              } else {
+                showToast(verifyData.error || 'Payment verification failed', 'info');
+              }
+            } catch (err) {
+              console.error('Payment verify error:', err);
+              showToast('Could not verify payment. Contact support.', 'info');
+            }
+          },
+          modal: {
+            ondismiss: function() {
+              payBtn.disabled = false;
+              payBtn.querySelector('.payment-btn-text').textContent = `Pay ₹${amountRupees} Now`;
+              showToast('Payment cancelled. You can pay anytime from your profile.', 'info');
+            }
+          }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function(response) {
+          console.error('Payment failed:', response.error);
+          showToast(`Payment failed: ${response.error.description}`, 'info');
+          payBtn.disabled = false;
+          payBtn.querySelector('.payment-btn-text').textContent = `Pay ₹${amountRupees} Now`;
+        });
+        rzp.open();
+
+      } catch (err) {
+        console.error('Payment error:', err);
+        showToast('Something went wrong. Please try again.', 'info');
+        payBtn.disabled = false;
+        payBtn.querySelector('.payment-btn-text').textContent = `Pay ₹${amountRupees} Now`;
+      }
+    });
+  }
+
 
   // ══════════════════════════════════════════
   //  PREMIUM MODAL (for non-logged-in users)
   // ══════════════════════════════════════════
   function showPremiumOrPlay() {
-    if (isLoggedIn()) {
+    if (!isLoggedIn()) {
+      openAuthModal('signup');
+    } else if (!isPaid()) {
+      openPaymentModal();
+    } else {
       showToast('Loading stream...', 'success');
       // Could open the video here in future
-    } else {
-      openAuthModal('signup');
     }
   }
 

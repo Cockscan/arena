@@ -6,6 +6,7 @@
   background: var(--bg-secondary);
   border-top: 1px solid var(--border);
   margin-top: 40px;
+  margin-left: var(--sidebar-width);
   padding: 0;
 }
 
@@ -150,6 +151,10 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .site-footer {
+    margin-left: 0;
+  }
+
   .footer-inner {
     grid-template-columns: 1fr;
     gap: 32px;

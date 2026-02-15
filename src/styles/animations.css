@@ -944,3 +944,187 @@
 .dropdown-upgrade:hover {
   background: rgba(133,199,66,0.1) !important;
 }
+
+
+/* ═══════════════════════════════════════════
+   WALLET STYLES
+   ═══════════════════════════════════════════ */
+
+/* Wallet Modal Animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Amount Chips */
+.amount-chip:hover {
+  background: rgba(133, 199, 66, 0.2) !important;
+  border-color: var(--accent) !important;
+  transform: translateY(-2px);
+}
+
+.amount-chip.selected {
+  background: var(--accent) !important;
+  color: #111 !important;
+  border-color: var(--accent) !important;
+}
+
+/* Payment Method Buttons */
+.pay-method:not([disabled]):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(133, 199, 66, 0.2);
+}
+
+.wallet-pay:not([disabled]):hover {
+  background: linear-gradient(135deg, #a0d865, #85c742) !important;
+}
+
+.direct-pay:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Transaction Item */
+.transaction-item:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Wallet Balance Pulse Animation */
+@keyframes balancePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.wallet-amount.updated {
+  animation: balancePulse 0.5s ease;
+  color: var(--accent);
+}
+
+/* Scrollbar for Transaction History */
+.history-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.history-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+  background: rgba(133, 199, 66, 0.3);
+  border-radius: 4px;
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(133, 199, 66, 0.5);
+}
+
+/* Profile Page Scrollbar */
+.purchased-videos-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.purchased-videos-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+.purchased-videos-list::-webkit-scrollbar-thumb {
+  background: rgba(133, 199, 66, 0.3);
+  border-radius: 4px;
+}
+
+.purchased-videos-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(133, 199, 66, 0.5);
+}
+
+/* Profile Modal Animation */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Video Player Styles */
+.video-player-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.video-player-modal {
+  opacity: 0;
+}
+
+.video-player-overlay.show .video-player-modal {
+  opacity: 1;
+}
+
+.video-player-container {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  max-height: 75vh;
+}
+
+/* Custom video controls enhancement */
+#main-video-player::-webkit-media-controls-panel {
+  background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+}
+
+#main-video-player::-webkit-media-controls-play-button,
+#main-video-player::-webkit-media-controls-timeline,
+#main-video-player::-webkit-media-controls-current-time-display,
+#main-video-player::-webkit-media-controls-time-remaining-display,
+#main-video-player::-webkit-media-controls-mute-button,
+#main-video-player::-webkit-media-controls-volume-slider,
+#main-video-player::-webkit-media-controls-fullscreen-button {
+  filter: brightness(1.2);
+}
+
+/* Responsive Video Player */
+@media (max-width: 768px) {
+  .video-player-overlay {
+    padding: 20px 10px;
+  }
+
+  .video-player-modal {
+    width: 95% !important;
+  }
+
+  .video-player-close {
+    top: -40px !important;
+    width: 35px !important;
+    height: 35px !important;
+    font-size: 20px !important;
+  }
+
+  .video-info-section {
+    margin-top: 16px !important;
+    padding: 16px !important;
+  }
+
+  .video-info-section > div {
+    flex-direction: column !important;
+  }
+
+  .video-info-section h2 {
+    font-size: 18px !important;
+  }
+}

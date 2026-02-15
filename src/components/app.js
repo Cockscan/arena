@@ -39,6 +39,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Current session is cached client-side for UI, but truth lives on server
   let currentUser = null;
 
+  // Video data cache
+  let videoDataMap = {}; // { videoId: { ...videoData, purchased: bool } }
+  let userPurchasedIds = new Set();
+
+  // Wallet state
+  let walletBalance = 0; // in paise
+  let walletBalanceRupees = 0;
+  let walletTransactions = [];
+
   function getSession() {
     return currentUser;
   }
@@ -54,14 +63,49 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (data.ok && data.user) {
         currentUser = data.user;
+        // Update wallet balance from session
+        walletBalance = data.user.wallet_balance || 0;
+        walletBalanceRupees = data.user.wallet_balance_rupees || 0;
       } else {
         currentUser = null;
+        walletBalance = 0;
+        walletBalanceRupees = 0;
       }
     } catch {
       currentUser = null;
+      walletBalance = 0;
+      walletBalanceRupees = 0;
     }
     updateHeaderForAuth();
     return currentUser;
+  }
+
+  // Fetch wallet balance from API
+  async function fetchWalletBalance() {
+    if (!currentUser) return;
+
+    try {
+      const res = await fetch('/api/wallet/balance', { credentials: 'include' });
+      const data = await res.json();
+
+      if (data.ok) {
+        walletBalance = data.balance;
+        walletBalanceRupees = data.balance_rupees;
+        updateWalletDisplay();
+      }
+    } catch (err) {
+      console.error('Error fetching wallet balance:', err);
+    }
+  }
+
+  // Update wallet display in UI
+  function updateWalletDisplay() {
+    const walletAmountEls = document.querySelectorAll('.wallet-amount');
+    walletAmountEls.forEach(el => {
+      el.textContent = `₹${walletBalanceRupees}`;
+      el.classList.add('updated');
+      setTimeout(() => el.classList.remove('updated'), 500);
+    });
   }
 
   // Sign Up via API
@@ -157,17 +201,31 @@ document.addEventListener('DOMContentLoaded', () => {
             ${session.payment_status !== 'paid' ? '<div class="dropdown-plan-status">Free Plan</div>' : '<div class="dropdown-plan-status paid">Premium Active</div>'}
           </div>
         </div>
+        <div class="dropdown-wallet-section" style="padding: 12px; margin: 8px 0; background: rgba(133,199,66,0.05); border-radius: 8px; border: 1px solid rgba(133,199,66,0.2);">
+          <div class="wallet-balance-display" style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <span style="font-size: 24px;">💰</span>
+            <div>
+              <div class="wallet-amount" style="font-size: 18px; font-weight: 700; color: var(--accent);">₹${walletBalanceRupees}</div>
+              <div class="wallet-label" style="font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px;">Wallet Balance</div>
+            </div>
+          </div>
+          <button class="dropdown-add-money" style="width: 100%; padding: 8px; background: linear-gradient(135deg, var(--accent), #6aad2d); color: #111; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">+ Add Money</button>
+        </div>
         <div class="dropdown-divider"></div>
         ${session.payment_status !== 'paid' ? `
         <a class="dropdown-item dropdown-upgrade" data-action="upgrade">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Upgrade to Premium — ₹99
+          Activate Account — ₹99
         </a>
         <div class="dropdown-divider"></div>
         ` : ''}
         <a class="dropdown-item" data-action="profile">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           My Profile
+        </a>
+        <a class="dropdown-item" data-action="history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Transaction History
         </a>
         <a class="dropdown-item" data-action="settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -195,6 +253,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
+      // Add Money button handler
+      const addMoneyBtn = dropdown.querySelector('.dropdown-add-money');
+      if (addMoneyBtn) {
+        addMoneyBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdown.classList.remove('show');
+          openAddMoneyModal();
+        });
+      }
+
       // Dropdown actions
       dropdown.querySelectorAll('.dropdown-item').forEach(item => {
         item.addEventListener('click', async (e) => {
@@ -207,6 +275,12 @@ document.addEventListener('DOMContentLoaded', () => {
           } else if (action === 'upgrade') {
             dropdown.classList.remove('show');
             openPaymentModal();
+          } else if (action === 'history') {
+            dropdown.classList.remove('show');
+            openTransactionHistory();
+          } else if (action === 'profile') {
+            dropdown.classList.remove('show');
+            openProfilePage();
           } else {
             showToast(`${item.textContent.trim()} — coming soon`);
           }
@@ -320,11 +394,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await signIn(identifier, password);
         if (result.ok) {
           closeAuthModal(overlay);
-          // Refresh session to get latest payment_status
           await fetchSession();
+          await fetchVideos();
           if (!isPaid()) {
-            showToast(`Welcome back, ${getSession().username}! Complete payment for premium.`, 'success');
+            showToast(`Welcome back, ${getSession().username}! Activate your account to continue.`, 'success');
             setTimeout(() => openPaymentModal(), 400);
+          } else if (window._pendingVideoId) {
+            const pendingId = window._pendingVideoId;
+            window._pendingVideoId = null;
+            showToast(`Welcome back, ${getSession().username}!`, 'success');
+            setTimeout(() => showPremiumOrPlay(pendingId), 400);
           } else {
             showToast(`Welcome back, ${getSession().username}!`, 'success');
           }
@@ -364,8 +443,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await signUp(username, email, password, confirmPassword);
         if (result.ok) {
           closeAuthModal(overlay);
-          showToast(`Account created! Complete payment to unlock premium.`, 'success');
-          // Open payment modal after successful signup
+          await fetchVideos();
+          showToast(`Account created! Activate your account to start watching.`, 'success');
           setTimeout(() => openPaymentModal(), 400);
         } else {
           errEl.textContent = result.error || 'Something went wrong';
@@ -437,8 +516,8 @@ document.addEventListener('DOMContentLoaded', () => {
               <line x1="1" y1="10" x2="23" y2="10"/>
             </svg>
           </div>
-          <h2 class="payment-title">Unlock Arena Sports Premium</h2>
-          <p class="payment-subtitle">Get unlimited access to all live streams, highlights, and exclusive content</p>
+          <h2 class="payment-title">Activate Your Arena Sports Account</h2>
+          <p class="payment-subtitle">One-time activation fee to start purchasing and streaming content</p>
         </div>
 
         <div class="payment-plan">
@@ -449,10 +528,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="plan-period">/ one-time</span>
           </div>
           <ul class="plan-features">
-            <li>✓ All live cricket, kabaddi, football & more</li>
-            <li>✓ HD quality streaming</li>
-            <li>✓ No ads on premium content</li>
-            <li>✓ Access on all devices</li>
+            <li>✓ Account activation — one-time fee</li>
+            <li>✓ Browse and purchase individual videos</li>
+            <li>✓ HD quality streaming on all devices</li>
+            <li>✓ Access your purchased content anytime</li>
           </ul>
         </div>
 
@@ -574,15 +653,20 @@ document.addEventListener('DOMContentLoaded', () => {
               const verifyData = await verifyRes.json();
 
               if (verifyData.ok) {
-                // Update local user state
                 currentUser.payment_status = 'paid';
                 updateHeaderForAuth();
 
-                // Close payment modal with success
                 overlay.classList.remove('show');
                 overlay.addEventListener('transitionend', () => overlay.remove());
 
-                showToast('🎉 Payment successful! Welcome to Arena Sports Premium!', 'success');
+                showToast('Account activated! You can now purchase videos.', 'success');
+
+                // Check if there's a pending video purchase
+                if (window._pendingVideoId) {
+                  const pendingId = window._pendingVideoId;
+                  window._pendingVideoId = null;
+                  setTimeout(() => openVideoPaymentModal(pendingId), 500);
+                }
               } else {
                 showToast(verifyData.error || 'Payment verification failed', 'info');
               }
@@ -620,27 +704,273 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // ══════════════════════════════════════════
-  //  PREMIUM MODAL (for non-logged-in users)
+  //  VIDEO DATA LAYER
   // ══════════════════════════════════════════
-  function showPremiumOrPlay() {
+
+  async function fetchVideos() {
+    try {
+      const res = await fetch('/api/videos', { credentials: 'include' });
+      const data = await res.json();
+      if (data.ok && data.videos) {
+        videoDataMap = {};
+        userPurchasedIds = new Set();
+        data.videos.forEach(v => {
+          videoDataMap[v.id] = v;
+          if (v.purchased) userPurchasedIds.add(v.id);
+        });
+        updateVideoCards();
+      }
+    } catch (err) {
+      console.error('Failed to fetch videos:', err);
+    }
+  }
+
+  function updateVideoCards() {
+    document.querySelectorAll('.video-card[data-video-id]').forEach(card => {
+      const videoId = parseInt(card.getAttribute('data-video-id'));
+      const video = videoDataMap[videoId];
+      if (!video) return;
+
+      // Remove existing price/premium badges to avoid duplicates
+      const existingBadge = card.querySelector('.video-price-badge');
+      if (existingBadge) existingBadge.remove();
+      const oldPremium = card.querySelector('.video-premium-tag');
+      if (oldPremium) oldPremium.remove();
+
+      // Add price badge to thumbnail
+      const thumb = card.querySelector('.video-thumb');
+      if (thumb) {
+        const badge = document.createElement('span');
+        badge.className = 'video-price-badge' + (video.purchased ? ' purchased' : '');
+        badge.textContent = video.purchased ? 'Purchased' : `₹${video.price_rupees}`;
+        thumb.appendChild(badge);
+      }
+
+      if (video.purchased) {
+        card.classList.add('purchased');
+      } else {
+        card.classList.remove('purchased');
+      }
+    });
+  }
+
+
+  // ══════════════════════════════════════════
+  //  SHOW PREMIUM OR PLAY (video-aware)
+  // ══════════════════════════════════════════
+  function showPremiumOrPlay(videoId) {
     if (!isLoggedIn()) {
+      window._pendingVideoId = videoId || null;
       openAuthModal('signup');
-    } else if (!isPaid()) {
+      return;
+    }
+    if (!isPaid()) {
+      window._pendingVideoId = videoId || null;
       openPaymentModal();
+      return;
+    }
+    if (videoId) {
+      const video = videoDataMap[videoId];
+      if (video && video.purchased) {
+        openVideoPlayer(videoId);
+        return;
+      }
+      openPurchaseOptionsModal(videoId);
     } else {
       showToast('Loading stream...', 'success');
-      // Could open the video here in future
     }
   }
 
 
   // ══════════════════════════════════════════
-  //  VIDEO CARD CLICK → AUTH/PREMIUM
+  //  VIDEO PAYMENT MODAL
   // ══════════════════════════════════════════
-  document.querySelectorAll('.video-card').forEach(card => {
+  async function openVideoPaymentModal(videoId) {
+    if (!isLoggedIn()) { openAuthModal('signup'); return; }
+    if (!isPaid()) { openPaymentModal(); return; }
+
+    const video = videoDataMap[videoId];
+    if (!video) { showToast('Video not found', 'info'); return; }
+    if (video.purchased) {
+      showToast('You already own this video!', 'success');
+      openVideoPlayer(videoId);
+      return;
+    }
+
+    // Remove existing video payment overlay
+    const existing = document.querySelector('.video-payment-overlay');
+    if (existing) existing.remove();
+
+    const priceRupees = video.price_rupees;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'auth-overlay video-payment-overlay';
+    overlay.innerHTML = `
+      <div class="auth-modal payment-modal">
+        <button class="auth-close" aria-label="Close">&times;</button>
+
+        <img class="video-purchase-thumb" src="${video.thumbnail_url}" alt="${video.title}">
+        <div class="video-purchase-category">${video.category}</div>
+        <div class="video-purchase-title">${video.title}</div>
+
+        <div class="payment-plan" style="margin-top:16px;">
+          <div class="plan-price">
+            <span class="plan-currency">₹</span>
+            <span class="plan-amount">${priceRupees}</span>
+            <span class="plan-period">/ one-time</span>
+          </div>
+        </div>
+
+        <div class="payment-methods">
+          <span class="payment-methods-label">Pay securely via</span>
+          <div class="payment-badges">
+            <span class="pay-badge">UPI</span>
+            <span class="pay-badge">Cards</span>
+            <span class="pay-badge">Net Banking</span>
+            <span class="pay-badge">Wallets</span>
+          </div>
+        </div>
+
+        <button class="payment-btn" id="video-pay-btn">
+          <span class="payment-btn-text">Buy for ₹${priceRupees}</span>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+
+        <p class="payment-disclaimer">
+          Secured by Razorpay. One-time purchase — watch anytime.<br>
+          <a href="info.html#refund" target="_blank">Refund Policy</a>
+        </p>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    // Close handlers
+    const closeOverlay = () => {
+      overlay.classList.remove('show');
+      overlay.addEventListener('transitionend', () => overlay.remove());
+    };
+    overlay.querySelector('.auth-close').addEventListener('click', closeOverlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeOverlay(); });
+    document.addEventListener('keydown', function esc(e) {
+      if (e.key === 'Escape') { closeOverlay(); document.removeEventListener('keydown', esc); }
+    });
+
+    // Animate in
+    requestAnimationFrame(() => overlay.classList.add('show'));
+
+    // Fetch payment config for this video
+    let config;
+    try {
+      const res = await fetch(`/api/payment/config?video_id=${videoId}`);
+      config = await res.json();
+    } catch (err) {
+      showToast('Payment system unavailable', 'info');
+      return;
+    }
+
+    // Pay button handler
+    overlay.querySelector('#video-pay-btn').addEventListener('click', async () => {
+      if (!config.enabled) {
+        showToast('Payment gateway not configured yet. Contact support.', 'info');
+        return;
+      }
+
+      const payBtn = overlay.querySelector('#video-pay-btn');
+      payBtn.disabled = true;
+      payBtn.querySelector('.payment-btn-text').textContent = 'Creating order...';
+
+      try {
+        const orderRes = await fetch('/api/payment/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ video_id: videoId })
+        });
+        const orderData = await orderRes.json();
+
+        if (!orderData.ok) {
+          showToast(orderData.error || 'Could not create order', 'info');
+          payBtn.disabled = false;
+          payBtn.querySelector('.payment-btn-text').textContent = `Buy for ₹${priceRupees}`;
+          return;
+        }
+
+        const options = {
+          key: config.key_id,
+          amount: orderData.order.amount,
+          currency: orderData.order.currency,
+          name: 'Arena Sports',
+          description: video.title,
+          order_id: orderData.order.id,
+          prefill: { name: currentUser.username, email: currentUser.email },
+          theme: { color: '#85c742' },
+          method: { upi: true, card: true, netbanking: true, wallet: true },
+          handler: async function(response) {
+            try {
+              const verifyRes = await fetch('/api/payment/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  video_id: videoId
+                })
+              });
+              const verifyData = await verifyRes.json();
+
+              if (verifyData.ok) {
+                userPurchasedIds.add(videoId);
+                if (videoDataMap[videoId]) videoDataMap[videoId].purchased = true;
+                updateVideoCards();
+
+                closeOverlay();
+                showToast('Purchase successful! Opening video...', 'success');
+
+                setTimeout(() => openVideoPlayer(videoId), 500);
+              } else {
+                showToast(verifyData.error || 'Verification failed', 'info');
+              }
+            } catch (err) {
+              console.error('Video payment verify error:', err);
+              showToast('Could not verify payment. Contact support.', 'info');
+            }
+          },
+          modal: {
+            ondismiss: function() {
+              payBtn.disabled = false;
+              payBtn.querySelector('.payment-btn-text').textContent = `Buy for ₹${priceRupees}`;
+            }
+          }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function(response) {
+          showToast(`Payment failed: ${response.error.description}`, 'info');
+          payBtn.disabled = false;
+          payBtn.querySelector('.payment-btn-text').textContent = `Buy for ₹${priceRupees}`;
+        });
+        rzp.open();
+
+      } catch (err) {
+        console.error('Video payment error:', err);
+        showToast('Something went wrong. Please try again.', 'info');
+        payBtn.disabled = false;
+        payBtn.querySelector('.payment-btn-text').textContent = `Buy for ₹${priceRupees}`;
+      }
+    });
+  }
+
+
+  // ══════════════════════════════════════════
+  //  VIDEO CARD CLICK → AUTH/PURCHASE
+  // ══════════════════════════════════════════
+  document.querySelectorAll('.video-card[data-video-id]').forEach(card => {
     card.addEventListener('click', (e) => {
       e.preventDefault();
-      showPremiumOrPlay();
+      const videoId = parseInt(card.getAttribute('data-video-id'));
+      showPremiumOrPlay(videoId);
     });
   });
 
@@ -670,6 +1000,18 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       sidebarItems.forEach(i => i.classList.remove('active'));
       item.classList.add('active');
+
+      // Clear any active tags
+      document.querySelectorAll('.sidebar-tag').forEach(t => {
+        t.classList.remove('active');
+        t.style.background = '';
+        t.style.borderColor = '';
+        t.style.color = '';
+      });
+
+      // Show all video cards (clear tag filtering)
+      document.querySelectorAll('.video-card').forEach(card => card.style.display = '');
+
       const filter = item.getAttribute('data-filter');
       filterBySport(filter);
       const label = item.textContent.trim().split('\n')[0].trim();
@@ -679,21 +1021,81 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // ── Sidebar Tags ──
+  function filterByTag(tagText) {
+    const allSections = document.querySelectorAll('.section[data-sport]');
+    const allCards = document.querySelectorAll('.video-card');
+    let matchCount = 0;
+
+    // Show all sections first
+    allSections.forEach(section => {
+      section.style.display = '';
+    });
+
+    // Filter video cards by tag
+    allCards.forEach(card => {
+      const title = (card.querySelector('.video-title')?.textContent || '').toLowerCase();
+      const category = (card.querySelector('.video-category')?.textContent || '').toLowerCase();
+      const searchText = (title + ' ' + category).toLowerCase();
+      const tagLower = tagText.toLowerCase();
+
+      if (searchText.includes(tagLower)) {
+        card.style.display = '';
+        matchCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    // Hide sections that have no visible cards
+    allSections.forEach(section => {
+      const visibleCards = section.querySelectorAll('.video-card:not([style*="display: none"])');
+      if (visibleCards.length === 0) {
+        section.style.display = 'none';
+      }
+    });
+
+    return matchCount;
+  }
+
   document.querySelectorAll('.sidebar-tag').forEach(tag => {
     tag.addEventListener('click', () => {
       const wasActive = tag.classList.contains('active');
+      const tagText = tag.textContent.trim();
+
+      // Clear all tag active states
       document.querySelectorAll('.sidebar-tag').forEach(t => {
         t.classList.remove('active');
         t.style.background = '';
         t.style.borderColor = '';
         t.style.color = '';
       });
+
+      // Clear sidebar filter active states
+      sidebarItems.forEach(i => i.classList.remove('active'));
+
       if (!wasActive) {
+        // Activate this tag
         tag.classList.add('active');
         tag.style.background = 'rgba(133,199,66,0.15)';
         tag.style.borderColor = 'rgba(133,199,66,0.3)';
         tag.style.color = '#85c742';
-        showToast(`Tag: ${tag.textContent.trim()}`);
+
+        // Filter videos by tag
+        const matchCount = filterByTag(tagText);
+        showToast(matchCount > 0 ? `Showing ${matchCount} videos for "${tagText}"` : `No videos found for "${tagText}"`);
+      } else {
+        // Deactivate - show all
+        const allSections = document.querySelectorAll('.section[data-sport]');
+        const allCards = document.querySelectorAll('.video-card');
+
+        allSections.forEach(section => section.style.display = '');
+        allCards.forEach(card => card.style.display = '');
+
+        // Reactivate "All Sports" in sidebar
+        const allItem = document.querySelector('.sidebar-item[data-filter="all"]');
+        if (allItem) allItem.classList.add('active');
+
+        showToast('Showing all videos');
       }
     });
   });
@@ -711,6 +1113,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (text === 'Home') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Clear tag filters
+        document.querySelectorAll('.sidebar-tag').forEach(t => {
+          t.classList.remove('active');
+          t.style.background = '';
+          t.style.borderColor = '';
+          t.style.color = '';
+        });
+        document.querySelectorAll('.video-card').forEach(card => card.style.display = '');
+
         filterBySport('all');
         sidebarItems.forEach(i => i.classList.remove('active'));
         const allItem = document.querySelector('.sidebar-item[data-filter="all"]');
@@ -719,6 +1131,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (text === 'Browse') {
         const firstSection = document.querySelector('.section[data-sport]');
         if (firstSection) firstSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Clear tag filters
+        document.querySelectorAll('.sidebar-tag').forEach(t => {
+          t.classList.remove('active');
+          t.style.background = '';
+          t.style.borderColor = '';
+          t.style.color = '';
+        });
+        document.querySelectorAll('.video-card').forEach(card => card.style.display = '');
+
         filterBySport('all');
         sidebarItems.forEach(i => i.classList.remove('active'));
         const allItem = document.querySelector('.sidebar-item[data-filter="all"]');
@@ -731,6 +1153,793 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
+
+  // ══════════════════════════════════════════
+  //  WALLET MODALS
+  // ══════════════════════════════════════════
+
+  // Open Add Money Modal
+  function openAddMoneyModal() {
+    if (!currentUser) {
+      openAuthModal('signin');
+      return;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'auth-overlay wallet-modal-overlay';
+
+    const presetAmounts = [
+      { value: 10000, label: '₹100' },
+      { value: 20000, label: '₹200' },
+      { value: 50000, label: '₹500' },
+      { value: 100000, label: '₹1000' },
+      { value: 200000, label: '₹2000' }
+    ];
+
+    let selectedAmount = 50000; // default ₹500
+
+    overlay.innerHTML = `
+      <div class="auth-modal wallet-modal" style="max-width: 450px; animation: slideUp 0.3s ease;">
+        <button class="auth-close" aria-label="Close">&times;</button>
+
+        <h2 style="margin: 0 0 8px; font-size: 24px; text-align: center;">💰 Add Money to Wallet</h2>
+        <p style="margin: 0 0 24px; color: rgba(255,255,255,0.6); text-align: center; font-size: 14px;">Choose an amount to add to your wallet</p>
+
+        <div class="amount-options" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+          ${presetAmounts.map(amt => `
+            <button class="amount-chip ${amt.value === selectedAmount ? 'selected' : ''}"
+                    data-amount="${amt.value}"
+                    style="padding: 14px; background: ${amt.value === selectedAmount ? 'var(--accent)' : 'rgba(255,255,255,0.05)'};
+                           color: ${amt.value === selectedAmount ? '#111' : '#fff'}; border: 1px solid ${amt.value === selectedAmount ? 'var(--accent)' : 'rgba(255,255,255,0.1)'};
+                           border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 15px;">
+              ${amt.label}
+            </button>
+          `).join('')}
+        </div>
+
+        <div class="custom-amount" style="margin-bottom: 24px;">
+          <label style="display: block; margin-bottom: 8px; font-size: 14px; color: rgba(255,255,255,0.7);">Or enter custom amount</label>
+          <input type="number"
+                 class="custom-amount-input"
+                 placeholder="Enter amount in ₹"
+                 min="10"
+                 max="10000"
+                 style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+                        border-radius: 8px; color: #fff; font-size: 16px;">
+        </div>
+
+        <button class="wallet-add-btn payment-btn"
+                style="width: 100%; padding: 16px; background: linear-gradient(135deg, var(--accent), #6aad2d);
+                       color: #111; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer;">
+          <span class="payment-btn-text">Add ₹${Math.round(selectedAmount / 100)} to Wallet</span>
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Amount chip selection
+    overlay.querySelectorAll('.amount-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        selectedAmount = parseInt(chip.dataset.amount);
+        overlay.querySelectorAll('.amount-chip').forEach(c => {
+          c.classList.remove('selected');
+          c.style.background = 'rgba(255,255,255,0.05)';
+          c.style.color = '#fff';
+          c.style.borderColor = 'rgba(255,255,255,0.1)';
+        });
+        chip.classList.add('selected');
+        chip.style.background = 'var(--accent)';
+        chip.style.color = '#111';
+        chip.style.borderColor = 'var(--accent)';
+        overlay.querySelector('.payment-btn-text').textContent = `Add ₹${Math.round(selectedAmount / 100)} to Wallet`;
+        overlay.querySelector('.custom-amount-input').value = '';
+      });
+    });
+
+    // Custom amount input
+    const customInput = overlay.querySelector('.custom-amount-input');
+    customInput.addEventListener('input', () => {
+      const customAmount = parseInt(customInput.value) * 100; // convert to paise
+      if (customAmount >= 1000 && customAmount <= 1000000) {
+        selectedAmount = customAmount;
+        overlay.querySelectorAll('.amount-chip').forEach(c => {
+          c.classList.remove('selected');
+          c.style.background = 'rgba(255,255,255,0.05)';
+          c.style.color = '#fff';
+          c.style.borderColor = 'rgba(255,255,255,0.1)';
+        });
+        overlay.querySelector('.payment-btn-text').textContent = `Add ₹${Math.round(selectedAmount / 100)} to Wallet`;
+      }
+    });
+
+    // Add money button
+    overlay.querySelector('.wallet-add-btn').addEventListener('click', async () => {
+      if (selectedAmount < 1000 || selectedAmount > 1000000) {
+        showToast('Amount must be between ₹10 and ₹10,000', 'info');
+        return;
+      }
+
+      await processWalletDeposit(selectedAmount, overlay);
+    });
+
+    // Close handlers
+    const closeOverlay = () => {
+      overlay.classList.remove('show');
+      overlay.addEventListener('transitionend', () => overlay.remove());
+    };
+    overlay.querySelector('.auth-close').addEventListener('click', closeOverlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeOverlay(); });
+
+    // Animate in
+    requestAnimationFrame(() => overlay.classList.add('show'));
+  }
+
+  // Process wallet deposit (Razorpay)
+  async function processWalletDeposit(amount, modalOverlay) {
+    try {
+      const btn = modalOverlay.querySelector('.wallet-add-btn');
+      btn.disabled = true;
+      btn.querySelector('.payment-btn-text').textContent = 'Creating order...';
+
+      // Create Razorpay order
+      const orderRes = await fetch('/api/wallet/add-money/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ amount })
+      });
+
+      const orderData = await orderRes.json();
+      if (!orderData.ok) {
+        showToast(orderData.error, 'info');
+        btn.disabled = false;
+        btn.querySelector('.payment-btn-text').textContent = `Add ₹${Math.round(amount / 100)} to Wallet`;
+        return;
+      }
+
+      const options = {
+        key: orderData.order.key_id || window.RAZORPAY_KEY_ID,
+        amount: orderData.order.amount,
+        currency: orderData.order.currency,
+        name: 'Arena Sports',
+        description: `Add ₹${Math.round(amount / 100)} to Wallet`,
+        order_id: orderData.order.id,
+        prefill: {
+          name: currentUser.username,
+          email: currentUser.email
+        },
+        theme: { color: '#85c742' },
+        handler: async (response) => {
+          // Verify payment
+          const verifyRes = await fetch('/api/wallet/add-money/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              amount
+            })
+          });
+
+          const verifyData = await verifyRes.json();
+          if (verifyData.ok) {
+            walletBalance = verifyData.new_balance;
+            walletBalanceRupees = verifyData.new_balance_rupees;
+            updateWalletDisplay();
+            modalOverlay.remove();
+            showToast(`₹${Math.round(amount / 100)} added to wallet successfully!`, 'success');
+          } else {
+            showToast(verifyData.error, 'info');
+            btn.disabled = false;
+            btn.querySelector('.payment-btn-text').textContent = `Add ₹${Math.round(amount / 100)} to Wallet`;
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            btn.disabled = false;
+            btn.querySelector('.payment-btn-text').textContent = `Add ₹${Math.round(amount / 100)} to Wallet`;
+          }
+        }
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.open();
+
+    } catch (err) {
+      console.error('Wallet deposit error:', err);
+      showToast('Failed to process deposit', 'info');
+      const btn = modalOverlay.querySelector('.wallet-add-btn');
+      btn.disabled = false;
+      btn.querySelector('.payment-btn-text').textContent = `Add ₹${Math.round(amount / 100)} to Wallet`;
+    }
+  }
+
+  // Open Purchase Options Modal
+  function openPurchaseOptionsModal(videoId) {
+    const videoData = videoDataMap[videoId];
+    if (!videoData) return;
+
+    const videoPrice = videoData.price;
+    const videoPriceRupees = videoData.price_rupees;
+    const hasSufficientBalance = walletBalance >= videoPrice;
+    const remainingBalance = walletBalance - videoPrice;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'auth-overlay purchase-options-overlay';
+
+    overlay.innerHTML = `
+      <div class="auth-modal purchase-options-modal" style="max-width: 500px; animation: slideUp 0.3s ease;">
+        <button class="auth-close" aria-label="Close">&times;</button>
+
+        <h2 style="margin: 0 0 20px; font-size: 22px; text-align: center;">Choose Payment Method</h2>
+
+        <div class="video-preview" style="display: flex; gap: 15px; margin-bottom: 20px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+          <img src="${videoData.thumbnail_url}" style="width: 120px; height: 68px; object-fit: cover; border-radius: 6px;">
+          <div style="flex: 1;">
+            <h3 style="margin: 0 0 5px; font-size: 16px; line-height: 1.3;">${videoData.title}</h3>
+            <div style="font-size: 13px; color: rgba(255,255,255,0.5);">${videoData.category}</div>
+            <div style="margin-top: 8px; font-size: 20px; font-weight: 700; color: var(--accent);">₹${videoPriceRupees}</div>
+          </div>
+        </div>
+
+        <div class="payment-methods" style="display: flex; flex-direction: column; gap: 12px;">
+          <button class="pay-method wallet-pay"
+                  ${!hasSufficientBalance ? 'disabled' : ''}
+                  style="padding: 16px; background: ${hasSufficientBalance ? 'linear-gradient(135deg, var(--accent), #6aad2d)' : 'rgba(255,255,255,0.05)'};
+                         color: ${hasSufficientBalance ? '#111' : 'rgba(255,255,255,0.3)'}; border: none; border-radius: 10px;
+                         cursor: ${hasSufficientBalance ? 'pointer' : 'not-allowed'}; text-align: left; transition: all 0.2s;">
+            <div class="method-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 16px; font-weight: 700;">💰 Pay from Wallet</span>
+              <span class="method-badge" style="padding: 4px 8px; background: rgba(0,0,0,0.2); border-radius: 4px; font-size: 11px; font-weight: 600;">INSTANT</span>
+            </div>
+            <div class="method-balance" style="font-size: 13px; opacity: 0.8;">Current Balance: ₹${walletBalanceRupees}</div>
+            ${hasSufficientBalance
+              ? `<div class="method-remaining" style="font-size: 13px; opacity: 0.8;">After purchase: ₹${Math.round(remainingBalance / 100)}</div>`
+              : `<div style="font-size: 13px; color: #ff4444; font-weight: 600; margin-top: 4px;">Insufficient balance</div>`
+            }
+          </button>
+
+          <button class="pay-method direct-pay"
+                  style="padding: 16px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1);
+                         border-radius: 10px; cursor: pointer; text-align: left; transition: all 0.2s;">
+            <div class="method-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 16px; font-weight: 700;">💳 Pay Directly</span>
+            </div>
+            <div class="method-options" style="font-size: 13px; opacity: 0.7;">UPI • Cards • Net Banking • Wallets</div>
+          </button>
+        </div>
+
+        ${!hasSufficientBalance
+          ? `<a href="#" class="add-money-link" style="display: block; text-align: center; margin-top: 15px; color: var(--accent);
+                 font-size: 14px; text-decoration: none; font-weight: 600;">
+               Don't have enough balance? Add money to wallet →
+             </a>`
+          : ''
+        }
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Wallet payment button
+    const walletPayBtn = overlay.querySelector('.wallet-pay');
+    if (hasSufficientBalance) {
+      walletPayBtn.addEventListener('click', async () => {
+        overlay.remove();
+        await purchaseWithWallet(videoId);
+      });
+    }
+
+    // Direct payment button
+    overlay.querySelector('.direct-pay').addEventListener('click', () => {
+      overlay.remove();
+      openVideoPaymentModal(videoId); // Use existing Razorpay flow
+    });
+
+    // Add money link
+    if (!hasSufficientBalance) {
+      overlay.querySelector('.add-money-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        overlay.remove();
+        openAddMoneyModal();
+      });
+    }
+
+    // Close handlers
+    const closeOverlay = () => {
+      overlay.classList.remove('show');
+      overlay.addEventListener('transitionend', () => overlay.remove());
+    };
+    overlay.querySelector('.auth-close').addEventListener('click', closeOverlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeOverlay(); });
+
+    // Animate in
+    requestAnimationFrame(() => overlay.classList.add('show'));
+  }
+
+  // Purchase video with wallet
+  async function purchaseWithWallet(videoId) {
+    try {
+      const res = await fetch('/api/wallet/purchase-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ video_id: videoId })
+      });
+
+      const data = await res.json();
+
+      if (data.ok) {
+        // Update wallet balance
+        walletBalance = data.remaining_balance;
+        walletBalanceRupees = data.remaining_balance_rupees;
+        updateWalletDisplay();
+
+        // Update video data
+        userPurchasedIds.add(videoId);
+        if (videoDataMap[videoId]) {
+          videoDataMap[videoId].purchased = true;
+        }
+        updateVideoCards();
+
+        // Show success toast and open video
+        showToast('Video purchased successfully! Opening video...', 'success');
+        setTimeout(() => openVideoPlayer(videoId), 500);
+      } else {
+        showToast(data.error, 'info');
+      }
+    } catch (err) {
+      console.error('Wallet purchase error:', err);
+      showToast('Failed to complete purchase', 'info');
+    }
+  }
+
+  // Open Video Player Modal
+  function openVideoPlayer(videoId) {
+    const video = videoDataMap[videoId];
+    if (!video) {
+      showToast('Video not found', 'info');
+      return;
+    }
+
+    if (!video.purchased) {
+      showToast('Please purchase this video first', 'info');
+      return;
+    }
+
+    if (!video.video_url) {
+      showToast('Video URL not available', 'info');
+      return;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'auth-overlay video-player-overlay';
+    overlay.style.background = 'rgba(0, 0, 0, 0.95)';
+    overlay.style.zIndex = '999';
+
+    overlay.innerHTML = `
+      <div class="video-player-modal" style="width: 90%; max-width: 1400px; margin: 0 auto; position: relative; animation: slideUp 0.3s ease;">
+        <button class="video-player-close" style="position: absolute; top: -50px; right: 0; background: rgba(255,255,255,0.1); border: none; width: 40px; height: 40px; border-radius: 50%; color: #fff; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10;">
+          &times;
+        </button>
+
+        <!-- Video Player Container -->
+        <div class="video-player-container" style="position: relative; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+          <video
+            id="main-video-player"
+            style="width: 100%; display: block; outline: none;"
+            controls
+            autoplay
+            controlsList="nodownload"
+            oncontextmenu="return false;">
+            <source src="${video.video_url}" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+
+        <!-- Video Info Below Player -->
+        <div class="video-info-section" style="margin-top: 24px; padding: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+          <div style="display: flex; gap: 20px; align-items: start;">
+            <div style="flex: 1;">
+              <h2 style="margin: 0 0 8px; font-size: 24px; font-weight: 600;">${video.title}</h2>
+              <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 12px;">
+                <span style="padding: 4px 12px; background: rgba(133,199,66,0.15); border: 1px solid rgba(133,199,66,0.3); border-radius: 6px; font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px;">
+                  ${video.category}
+                </span>
+                ${video.duration ? `<span style="color: rgba(255,255,255,0.5); font-size: 14px;">⏱️ ${video.duration}</span>` : ''}
+                ${video.channel_name ? `<span style="color: rgba(255,255,255,0.5); font-size: 14px;">📺 ${video.channel_name}</span>` : ''}
+                <span style="color: rgba(255,255,255,0.5); font-size: 14px;">👁️ ${video.views || 'N/A'}</span>
+              </div>
+              ${video.description ? `<p style="margin: 0; color: rgba(255,255,255,0.7); line-height: 1.6; font-size: 14px;">${video.description}</p>` : ''}
+            </div>
+            <div style="flex-shrink: 0; text-align: right;">
+              <div style="padding: 12px 20px; background: rgba(133,199,66,0.1); border: 1px solid rgba(133,199,66,0.2); border-radius: 8px; margin-bottom: 8px;">
+                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Purchased</div>
+                <div style="font-size: 18px; font-weight: 700; color: var(--accent);">₹${video.price_rupees}</div>
+              </div>
+              <div style="font-size: 11px; color: rgba(255,255,255,0.4); display: flex; align-items: center; gap: 4px; justify-content: flex-end;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                Lifetime Access
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const videoPlayer = overlay.querySelector('#main-video-player');
+    const closeBtn = overlay.querySelector('.video-player-close');
+
+    // Close button hover effect
+    closeBtn.addEventListener('mouseenter', () => {
+      closeBtn.style.background = 'rgba(255,255,255,0.2)';
+      closeBtn.style.transform = 'scale(1.1)';
+    });
+    closeBtn.addEventListener('mouseleave', () => {
+      closeBtn.style.background = 'rgba(255,255,255,0.1)';
+      closeBtn.style.transform = 'scale(1)';
+    });
+
+    // Close handlers
+    const closePlayer = () => {
+      videoPlayer.pause();
+      overlay.classList.remove('show');
+      setTimeout(() => overlay.remove(), 300);
+    };
+
+    closeBtn.addEventListener('click', closePlayer);
+
+    // Close on Escape key
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        closePlayer();
+        document.removeEventListener('keydown', handleEscape);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+
+    // Don't close when clicking on video or info
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        closePlayer();
+      }
+    });
+
+    // Animate in
+    requestAnimationFrame(() => overlay.classList.add('show'));
+
+    // Show toast
+    showToast('Enjoy watching! 🎬', 'success');
+  }
+
+  // Open Profile Page Modal
+  async function openProfilePage() {
+    if (!currentUser) {
+      openAuthModal('signin');
+      return;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'auth-overlay profile-modal-overlay';
+
+    overlay.innerHTML = `
+      <div class="auth-modal profile-modal" style="max-width: 850px; max-height: 85vh; display: flex; flex-direction: column; animation: slideUp 0.3s ease;">
+        <button class="auth-close" aria-label="Close">&times;</button>
+
+        <!-- Profile Header -->
+        <div class="profile-header" style="display: flex; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
+          <div class="profile-avatar" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--accent), #6aad2d); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: #111; flex-shrink: 0;">
+            ${currentUser.username.charAt(0).toUpperCase()}
+          </div>
+          <div style="flex: 1;">
+            <h2 style="margin: 0 0 8px; font-size: 28px;">${currentUser.username}</h2>
+            <p style="margin: 0 0 8px; color: rgba(255,255,255,0.6); font-size: 14px;">${currentUser.email}</p>
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <span class="profile-status-badge" style="padding: 4px 12px; background: ${currentUser.payment_status === 'paid' ? 'rgba(133,199,66,0.15)' : 'rgba(255,255,255,0.1)'}; border: 1px solid ${currentUser.payment_status === 'paid' ? 'rgba(133,199,66,0.3)' : 'rgba(255,255,255,0.2)'}; border-radius: 12px; font-size: 12px; font-weight: 600; color: ${currentUser.payment_status === 'paid' ? 'var(--accent)' : 'rgba(255,255,255,0.5)'}; text-transform: uppercase; letter-spacing: 0.5px;">
+                ${currentUser.payment_status === 'paid' ? '✓ Premium Active' : 'Free Plan'}
+              </span>
+              <span style="padding: 4px 12px; background: rgba(255,255,255,0.05); border-radius: 12px; font-size: 12px; color: rgba(255,255,255,0.5);">
+                💰 Wallet: ₹${walletBalanceRupees}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="profile-stats" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+          <div class="stat-card" style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; text-align: center;">
+            <div class="stat-value" style="font-size: 24px; font-weight: 700; color: var(--accent); margin-bottom: 4px;">-</div>
+            <div class="stat-label" style="font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px;">Videos Owned</div>
+          </div>
+          <div class="stat-card" style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; text-align: center;">
+            <div class="stat-value" style="font-size: 24px; font-weight: 700; color: var(--accent); margin-bottom: 4px;">-</div>
+            <div class="stat-label" style="font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px;">Total Spent</div>
+          </div>
+          <div class="stat-card" style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; text-align: center;">
+            <div class="stat-value" style="font-size: 24px; font-weight: 700; color: var(--accent); margin-bottom: 4px;">Lifetime</div>
+            <div class="stat-label" style="font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px;">Access</div>
+          </div>
+        </div>
+
+        <!-- Purchased Videos Section -->
+        <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 600;">📹 My Purchased Videos</h3>
+        </div>
+
+        <div class="purchased-videos-list" style="flex: 1; overflow-y: auto; min-height: 200px;">
+          <div class="loading-spinner" style="text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.5);">
+            <div style="margin-bottom: 12px; font-size: 14px;">Loading your purchases...</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const purchasedVideosList = overlay.querySelector('.purchased-videos-list');
+    const statCards = overlay.querySelectorAll('.stat-value');
+
+    // Fetch purchased videos
+    async function loadPurchasedVideos() {
+      try {
+        const res = await fetch('/api/purchases', { credentials: 'include' });
+        const data = await res.json();
+
+        if (data.ok) {
+          const purchases = data.purchases;
+
+          // Update stats
+          const totalVideos = purchases.length;
+          const totalSpent = purchases.reduce((sum, p) => sum + p.payment_amount, 0);
+
+          statCards[0].textContent = totalVideos;
+          statCards[1].textContent = `₹${Math.round(totalSpent / 100)}`;
+
+          if (purchases.length === 0) {
+            purchasedVideosList.innerHTML = `
+              <div style="text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.5);">
+                <div style="font-size: 48px; margin-bottom: 16px;">🎥</div>
+                <div style="font-size: 16px; margin-bottom: 8px;">No videos purchased yet</div>
+                <div style="font-size: 13px; color: rgba(255,255,255,0.3);">Browse our collection and start watching!</div>
+              </div>
+            `;
+          } else {
+            purchasedVideosList.innerHTML = purchases.map(purchase => {
+              const purchaseDate = new Date(purchase.purchased_at);
+              const formattedDate = purchaseDate.toLocaleDateString('en-IN', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+              });
+              const paymentMethod = purchase.payment_method === 'wallet' ? '💰 Wallet' : '💳 Direct Payment';
+
+              return `
+                <div class="purchased-video-item" style="display: flex; gap: 16px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 12px; transition: all 0.2s; cursor: pointer;" data-video-id="${purchase.video_id}">
+                  <img src="${purchase.thumbnail_url}" style="width: 180px; height: 100px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                      <div style="flex: 1; min-width: 0;">
+                        <h4 style="margin: 0 0 6px; font-size: 16px; font-weight: 600; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${purchase.title}</h4>
+                        <div style="font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 4px;">
+                          <span style="color: var(--accent);">${purchase.category}</span>
+                          ${purchase.duration ? ` • ${purchase.duration}` : ''}
+                          ${purchase.channel_name ? ` • ${purchase.channel_name}` : ''}
+                        </div>
+                      </div>
+                      <div style="text-align: right; margin-left: 12px; flex-shrink: 0;">
+                        <div style="font-size: 18px; font-weight: 700; color: var(--accent); margin-bottom: 4px;">₹${Math.round(purchase.payment_amount / 100)}</div>
+                        <div style="font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px;">${paymentMethod}</div>
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 12px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05);">
+                      <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,0.5);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="10"/>
+                          <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        Purchased ${formattedDate}
+                      </div>
+                      <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--accent); font-weight: 600;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                          <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        Lifetime Access
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+
+            // Add click handlers to watch videos
+            purchasedVideosList.querySelectorAll('.purchased-video-item').forEach(item => {
+              item.addEventListener('click', () => {
+                const videoId = parseInt(item.dataset.videoId);
+                overlay.remove();
+                setTimeout(() => openVideoPlayer(videoId), 200);
+              });
+
+              // Hover effect
+              item.addEventListener('mouseenter', () => {
+                item.style.background = 'rgba(255,255,255,0.06)';
+                item.style.borderColor = 'rgba(133,199,66,0.2)';
+                item.style.transform = 'translateY(-2px)';
+              });
+              item.addEventListener('mouseleave', () => {
+                item.style.background = 'rgba(255,255,255,0.03)';
+                item.style.borderColor = 'rgba(255,255,255,0.05)';
+                item.style.transform = 'translateY(0)';
+              });
+            });
+          }
+        } else {
+          purchasedVideosList.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.5);">
+              <div style="font-size: 16px; color: #ff6b6b;">Failed to load purchases</div>
+              <div style="font-size: 13px; margin-top: 8px;">${data.error || 'Please try again'}</div>
+            </div>
+          `;
+        }
+      } catch (err) {
+        console.error('Error loading purchases:', err);
+        purchasedVideosList.innerHTML = `
+          <div style="text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.5);">
+            <div style="font-size: 16px; color: #ff6b6b;">Error loading purchases</div>
+            <div style="font-size: 13px; margin-top: 8px;">Please check your connection and try again</div>
+          </div>
+        `;
+      }
+    }
+
+    // Close handlers
+    const closeOverlay = () => {
+      overlay.classList.remove('show');
+      overlay.addEventListener('transitionend', () => overlay.remove());
+    };
+    overlay.querySelector('.auth-close').addEventListener('click', closeOverlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeOverlay(); });
+
+    // Animate in
+    requestAnimationFrame(() => overlay.classList.add('show'));
+
+    // Load purchased videos
+    loadPurchasedVideos();
+  }
+
+  // Open Transaction History Modal
+  async function openTransactionHistory() {
+    if (!currentUser) {
+      openAuthModal('signin');
+      return;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'auth-overlay history-modal-overlay';
+
+    overlay.innerHTML = `
+      <div class="auth-modal history-modal" style="max-width: 650px; max-height: 80vh; display: flex; flex-direction: column; animation: slideUp 0.3s ease;">
+        <button class="auth-close" aria-label="Close">&times;</button>
+
+        <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 15px;">
+          <h2 style="margin: 0; font-size: 24px;">📜 Transaction History</h2>
+        </div>
+
+        <div class="history-tabs" style="display: flex; gap: 10px; padding: 0 0 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+          <button class="tab active" data-filter="all" style="padding: 8px 16px; background: var(--accent); color: #111; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">All</button>
+          <button class="tab" data-filter="DEPOSIT" style="padding: 8px 16px; background: rgba(255,255,255,0.05); color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">Deposits</button>
+          <button class="tab" data-filter="PURCHASE" style="padding: 8px 16px; background: rgba(255,255,255,0.05); color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">Purchases</button>
+        </div>
+
+        <div class="history-list" style="flex: 1; overflow-y: auto; padding: 20px 0;">
+          <div class="loading-spinner" style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">
+            Loading transactions...
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const historyList = overlay.querySelector('.history-list');
+    let currentFilter = 'all';
+
+    // Fetch transactions
+    async function loadTransactions(filter = 'all') {
+      try {
+        const url = filter === 'all'
+          ? '/api/wallet/transactions?limit=50'
+          : `/api/wallet/transactions?limit=50&type=${filter}`;
+
+        const res = await fetch(url, { credentials: 'include' });
+        const data = await res.json();
+
+        if (data.ok) {
+          renderTransactions(data.transactions);
+        } else {
+          historyList.innerHTML = `<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">Failed to load transactions</div>`;
+        }
+      } catch (err) {
+        console.error('Error loading transactions:', err);
+        historyList.innerHTML = `<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">Error loading transactions</div>`;
+      }
+    }
+
+    function renderTransactions(transactions) {
+      if (transactions.length === 0) {
+        historyList.innerHTML = `<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.5);">No transactions yet</div>`;
+        return;
+      }
+
+      historyList.innerHTML = transactions.map(tx => {
+        const isDeposit = tx.type === 'DEPOSIT';
+        const icon = isDeposit ? '↓' : '🎥';
+        const amountColor = isDeposit ? '#4caf50' : '#ff6b6b';
+        const amountPrefix = isDeposit ? '+' : '';
+        const date = new Date(tx.created_at);
+        const formattedDate = date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+        const formattedTime = date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+        return `
+          <div class="transaction-item ${tx.type.toLowerCase()}" style="display: flex; gap: 15px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s;">
+            <div class="tx-icon" style="width: 40px; height: 40px; background: ${isDeposit ? 'rgba(76,175,80,0.15)' : 'rgba(255,107,107,0.15)'};
+                                         border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+              ${icon}
+            </div>
+            <div class="tx-details" style="flex: 1; min-width: 0;">
+              <div class="tx-title" style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">${tx.description}</div>
+              <div class="tx-meta" style="font-size: 12px; color: rgba(255,255,255,0.5);">${formattedDate} • ${formattedTime}</div>
+            </div>
+            <div class="tx-amount" style="font-size: 18px; font-weight: 700; color: ${amountColor}; flex-shrink: 0;">
+              ${amountPrefix}₹${Math.abs(tx.amount_rupees)}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Tab switching
+    overlay.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const filter = tab.dataset.filter;
+        currentFilter = filter;
+
+        overlay.querySelectorAll('.tab').forEach(t => {
+          t.classList.remove('active');
+          t.style.background = 'rgba(255,255,255,0.05)';
+          t.style.color = '#fff';
+        });
+        tab.classList.add('active');
+        tab.style.background = 'var(--accent)';
+        tab.style.color = '#111';
+
+        loadTransactions(filter);
+      });
+    });
+
+    // Close handlers
+    const closeOverlay = () => {
+      overlay.classList.remove('show');
+      overlay.addEventListener('transitionend', () => overlay.remove());
+    };
+    overlay.querySelector('.auth-close').addEventListener('click', closeOverlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeOverlay(); });
+
+    // Animate in
+    requestAnimationFrame(() => overlay.classList.add('show'));
+
+    // Initial load
+    loadTransactions('all');
+  }
 
 
   // ══════════════════════════════════════════
@@ -879,6 +2088,14 @@ document.addEventListener('DOMContentLoaded', () => {
       card.classList.remove('search-match', 'search-hidden');
     });
 
+    // Clear any active tags
+    document.querySelectorAll('.sidebar-tag').forEach(t => {
+      t.classList.remove('active');
+      t.style.background = '';
+      t.style.borderColor = '';
+      t.style.color = '';
+    });
+
     // Reset sections to match sidebar filter
     const activeFilter = document.querySelector('.sidebar-item.active');
     const filter = activeFilter ? activeFilter.getAttribute('data-filter') : 'all';
@@ -900,10 +2117,14 @@ document.addEventListener('DOMContentLoaded', () => {
   window.clearSearch = clearSearch;
 
   if (searchInput) {
+    console.log('Search input found, attaching event listeners');
+
     // Search on Enter
     searchInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
+        e.preventDefault();
         const query = searchInput.value.trim();
+        console.log('Search Enter pressed, query:', query);
         if (query) {
           performSearch(query);
         } else {
@@ -918,9 +2139,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Live search as you type (debounced)
     let searchTimeout;
-    searchInput.addEventListener('input', () => {
+    searchInput.addEventListener('input', (e) => {
       clearTimeout(searchTimeout);
       const query = searchInput.value.trim();
+      console.log('Search input event, query:', query);
       searchTimeout = setTimeout(() => {
         if (query.length >= 2) {
           performSearch(query);
@@ -930,10 +2152,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 300);
     });
 
+    // Click event for better mobile support
+    searchInput.addEventListener('click', (e) => {
+      console.log('Search input clicked');
+      searchInput.focus();
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-      if (e.key === '/' && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); }
+      if (e.key === '/' && document.activeElement !== searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+        console.log('Search focused via / shortcut');
+      }
     });
+  } else {
+    console.error('Search input not found! Selector: .search-bar input');
   }
 
 
@@ -962,7 +2196,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: false });
   }
   document.querySelectorAll('.ticker-card').forEach(card => {
-    card.addEventListener('click', () => showPremiumOrPlay());
+    card.addEventListener('click', () => showPremiumOrPlay(null));
   });
 
 
@@ -1133,7 +2367,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(liveTick, 15000);
 
 
-  // ── Init: check session on load ──
-  fetchSession();
+  // ── Init: check session and load videos on page load ──
+  fetchSession().then(() => fetchVideos());
 
 });

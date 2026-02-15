@@ -115,6 +115,13 @@
   color: var(--accent);
 }
 
+.sidebar-tag.active {
+  background: rgba(133, 199, 66, 0.15);
+  border-color: rgba(133, 199, 66, 0.3);
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .sidebar-divider {
   height: 1px;
   background: var(--border);

@@ -1533,6 +1533,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Open Video Player Modal
+  function getYouTubeId(url) {
+    if (!url) return null;
+    // Match youtube.com/watch?v=ID
+    let match = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+    if (match) return match[1];
+    // Match youtu.be/ID
+    match = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+    if (match) return match[1];
+    // Match youtube.com/embed/ID
+    match = url.match(/embed\/([a-zA-Z0-9_-]{11})/);
+    if (match) return match[1];
+    return null;
+  }
+
   function openVideoPlayer(videoId) {
     const video = videoDataMap[videoId];
     if (!video) {
@@ -1545,57 +1559,54 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Extract YouTube video ID or use search query fallback
+    const ytId = getYouTubeId(video.video_url);
+    let embedUrl;
+    if (ytId) {
+      embedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`;
+    } else if (video.video_url.includes('youtube.com/results')) {
+      // Search URL — extract query and use embed search
+      const searchParams = new URL(video.video_url).searchParams;
+      const query = searchParams.get('search_query') || video.title;
+      embedUrl = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(query)}&autoplay=1`;
+    } else {
+      // Direct URL fallback — open in new tab
+      window.open(video.video_url, '_blank');
+      return;
+    }
+
     const overlay = document.createElement('div');
     overlay.className = 'auth-overlay video-player-overlay';
     overlay.style.background = 'rgba(0, 0, 0, 0.95)';
     overlay.style.zIndex = '999';
 
     overlay.innerHTML = `
-      <div class="video-player-modal" style="width: 90%; max-width: 1400px; margin: 0 auto; position: relative; animation: slideUp 0.3s ease;">
+      <div class="video-player-modal" style="width: 90%; max-width: 1200px; margin: 0 auto; position: relative; animation: slideUp 0.3s ease;">
         <button class="video-player-close" style="position: absolute; top: -50px; right: 0; background: rgba(255,255,255,0.1); border: none; width: 40px; height: 40px; border-radius: 50%; color: #fff; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10;">
           &times;
         </button>
 
-        <!-- Video Player Container -->
-        <div class="video-player-container" style="position: relative; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
-          <video
+        <!-- YouTube Embed Container -->
+        <div class="video-player-container" style="position: relative; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); aspect-ratio: 16/9;">
+          <iframe
             id="main-video-player"
-            style="width: 100%; display: block; outline: none;"
-            controls
-            autoplay
-            controlsList="nodownload"
-            oncontextmenu="return false;">
-            <source src="${video.video_url}" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
+            src="${embedUrl}"
+            style="width: 100%; height: 100%; border: none;"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            allowfullscreen>
+          </iframe>
         </div>
 
         <!-- Video Info Below Player -->
-        <div class="video-info-section" style="margin-top: 24px; padding: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
-          <div style="display: flex; gap: 20px; align-items: start;">
-            <div style="flex: 1;">
-              <h2 style="margin: 0 0 8px; font-size: 24px; font-weight: 600;">${video.title}</h2>
-              <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 12px;">
-                <span style="padding: 4px 12px; background: rgba(133,199,66,0.15); border: 1px solid rgba(133,199,66,0.3); border-radius: 6px; font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px;">
-                  ${video.category}
-                </span>
-                ${video.duration ? `<span style="color: rgba(255,255,255,0.5); font-size: 14px;">⏱️ ${video.duration}</span>` : ''}
-                ${video.channel_name ? `<span style="color: rgba(255,255,255,0.5); font-size: 14px;">📺 ${video.channel_name}</span>` : ''}
-                <span style="color: rgba(255,255,255,0.5); font-size: 14px;">👁️ ${video.views || 'N/A'}</span>
-              </div>
-              ${video.description ? `<p style="margin: 0; color: rgba(255,255,255,0.7); line-height: 1.6; font-size: 14px;">${video.description}</p>` : ''}
-            </div>
-            <div style="flex-shrink: 0; text-align: right;">
-              <div style="padding: 12px 20px; background: rgba(133,199,66,0.1); border: 1px solid rgba(133,199,66,0.2); border-radius: 8px; margin-bottom: 8px;">
-                <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Purchased</div>
-                <div style="font-size: 18px; font-weight: 700; color: var(--accent);">₹${video.price_rupees}</div>
-              </div>
-              <div style="font-size: 11px; color: rgba(255,255,255,0.4); display: flex; align-items: center; gap: 4px; justify-content: flex-end;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
-                Lifetime Access
+        <div class="video-info-section" style="margin-top: 20px; padding: 16px 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+          <div style="display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 0;">
+              <h2 style="margin: 0 0 6px; font-size: 20px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${video.title}</h2>
+              <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <span style="padding: 3px 10px; background: rgba(133,199,66,0.15); border: 1px solid rgba(133,199,66,0.3); border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px;">${video.category}</span>
+                ${video.duration ? `<span style="color: rgba(255,255,255,0.5); font-size: 13px;">${video.duration}</span>` : ''}
+                ${video.channel_name ? `<span style="color: rgba(255,255,255,0.5); font-size: 13px;">${video.channel_name}</span>` : ''}
+                <span style="color: rgba(255,255,255,0.5); font-size: 13px;">${video.views || ''}</span>
               </div>
             </div>
           </div>
@@ -1605,10 +1616,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.body.appendChild(overlay);
 
-    const videoPlayer = overlay.querySelector('#main-video-player');
     const closeBtn = overlay.querySelector('.video-player-close');
 
-    // Close button hover effect
     closeBtn.addEventListener('mouseenter', () => {
       closeBtn.style.background = 'rgba(255,255,255,0.2)';
       closeBtn.style.transform = 'scale(1.1)';
@@ -1618,16 +1627,16 @@ document.addEventListener('DOMContentLoaded', () => {
       closeBtn.style.transform = 'scale(1)';
     });
 
-    // Close handlers
     const closePlayer = () => {
-      videoPlayer.pause();
+      // Remove iframe to stop playback
+      const iframe = overlay.querySelector('iframe');
+      if (iframe) iframe.src = '';
       overlay.classList.remove('show');
       setTimeout(() => overlay.remove(), 300);
     };
 
     closeBtn.addEventListener('click', closePlayer);
 
-    // Close on Escape key
     const handleEscape = (e) => {
       if (e.key === 'Escape') {
         closePlayer();
@@ -1636,18 +1645,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     document.addEventListener('keydown', handleEscape);
 
-    // Don't close when clicking on video or info
     overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        closePlayer();
-      }
+      if (e.target === overlay) closePlayer();
     });
 
-    // Animate in
     requestAnimationFrame(() => overlay.classList.add('show'));
-
-    // Show toast
-    showToast('Enjoy watching! 🎬', 'success');
   }
 
   // Open Profile Page Modal

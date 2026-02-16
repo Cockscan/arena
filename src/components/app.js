@@ -330,6 +330,9 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="auth-error" style="display:none"></div>
           <button type="submit" class="auth-submit-btn">Sign In</button>
+          <div style="text-align:center; margin-top:12px;">
+            <a href="#" class="forgot-password-link" style="color:var(--accent); font-size:13px; text-decoration:none; opacity:0.8; transition:opacity 0.2s;">Forgot password?</a>
+          </div>
         </form>
 
         <!-- SIGN UP FORM -->
@@ -396,10 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
           closeAuthModal(overlay);
           await fetchSession();
           await fetchVideos();
-          if (!isPaid()) {
-            showToast(`Welcome back, ${getSession().username}! Activate your account to continue.`, 'success');
-            setTimeout(() => openPaymentModal(), 400);
-          } else if (window._pendingVideoId) {
+          if (window._pendingVideoId) {
             const pendingId = window._pendingVideoId;
             window._pendingVideoId = null;
             showToast(`Welcome back, ${getSession().username}!`, 'success');
@@ -422,6 +422,52 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.textContent = 'Sign In';
       }
     });
+
+    // Forgot password handler
+    const forgotLink = overlay.querySelector('.forgot-password-link');
+    if (forgotLink) {
+      forgotLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const signinForm = overlay.querySelector('[data-form="signin"]');
+        signinForm.innerHTML = `
+          <div style="text-align:center; padding: 20px 0;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📧</div>
+            <h3 style="margin: 0 0 8px; font-size: 20px; color: #fff;">Reset Your Password</h3>
+            <p style="color: rgba(255,255,255,0.6); font-size: 14px; margin: 0 0 20px;">Enter your email and we'll send you a reset link.</p>
+          </div>
+          <div class="auth-field">
+            <label class="auth-label">Email Address</label>
+            <input type="email" class="auth-input" name="reset-email" placeholder="Enter your registered email" required autocomplete="email">
+          </div>
+          <div class="auth-error" style="display:none"></div>
+          <button type="submit" class="auth-submit-btn">Send Reset Link</button>
+          <div style="text-align:center; margin-top:12px;">
+            <a href="#" class="back-to-signin" style="color:var(--accent); font-size:13px; text-decoration:none; opacity:0.8;">← Back to Sign In</a>
+          </div>
+        `;
+        signinForm.addEventListener('submit', (ev) => {
+          ev.preventDefault();
+          const email = signinForm.querySelector('[name="reset-email"]').value;
+          if (email) {
+            signinForm.innerHTML = `
+              <div style="text-align:center; padding: 30px 0;">
+                <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+                <h3 style="margin: 0 0 8px; font-size: 20px; color: #fff;">Check Your Email</h3>
+                <p style="color: rgba(255,255,255,0.6); font-size: 14px; margin: 0;">If an account exists for <strong style="color:var(--accent);">${email}</strong>, you'll receive a password reset link shortly.</p>
+              </div>
+            `;
+          }
+        });
+        const backLink = signinForm.querySelector('.back-to-signin');
+        if (backLink) {
+          backLink.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            closeAuthModal(overlay);
+            setTimeout(() => openAuthModal('signin'), 200);
+          });
+        }
+      });
+    }
 
     // Sign Up submit
     overlay.querySelector('[data-form="signup"]').addEventListener('submit', async (e) => {
@@ -764,18 +810,8 @@ document.addEventListener('DOMContentLoaded', () => {
       openAuthModal('signup');
       return;
     }
-    if (!isPaid()) {
-      window._pendingVideoId = videoId || null;
-      openPaymentModal();
-      return;
-    }
     if (videoId) {
-      const video = videoDataMap[videoId];
-      if (video && video.purchased) {
-        openVideoPlayer(videoId);
-        return;
-      }
-      openPurchaseOptionsModal(videoId);
+      openVideoPlayer(videoId);
     } else {
       showToast('Loading stream...', 'success');
     }
@@ -787,7 +823,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ══════════════════════════════════════════
   async function openVideoPaymentModal(videoId) {
     if (!isLoggedIn()) { openAuthModal('signup'); return; }
-    if (!isPaid()) { openPaymentModal(); return; }
 
     const video = videoDataMap[videoId];
     if (!video) { showToast('Video not found', 'info'); return; }

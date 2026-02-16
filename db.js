@@ -32,8 +32,8 @@ const VIDEO_SEED_DATA = [
   // Super Bowl (13)
   { title: 'Seahawks vs Patriots — Full Game Highlights (29-13)', category: 'Super Bowl LX', sport: 'football', price: 19900, thumbnail_url: 'https://img.youtube.com/vi/ksG9O8PHXbI/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=ksG9O8PHXbI', duration: '23:10', channel_name: 'NFL', channel_avatar: 'N', views: '2.8M', likes: '180K', tag: 'MUST WATCH', is_live: false, is_premium: false },
   // Formula 1 (14-15)
-  { title: "Ferrari SF-26 Reveal — First Look at Hamilton's New Car", category: 'Formula 1', sport: 'f1', price: 9900, thumbnail_url: 'https://img.youtube.com/vi/S4s2OmLI_Fg/maxresdefault.jpg', video_url: 'https://www.youtube.com/results?search_query=ferrari+sf-26+reveal+hamilton+2026', duration: '12:05', channel_name: 'FORMULA 1', channel_avatar: 'F', views: '2.8M', likes: '150K', tag: null, is_live: false, is_premium: false },
-  { title: "Hamilton's First Laps in the SF-26 — Fiorano Shakedown", category: 'Formula 1', sport: 'f1', price: 4900, thumbnail_url: 'https://img.youtube.com/vi/1SfIa9mtgjU/hqdefault.jpg', video_url: 'https://www.youtube.com/results?search_query=hamilton+ferrari+fiorano+shakedown+sf-26', duration: '4:33', channel_name: 'FORMULA 1', channel_avatar: 'F', views: '4.1M', likes: '220K', tag: null, is_live: false, is_premium: false },
+  { title: "Ferrari SF-26 Reveal — First Look at Hamilton's New Car", category: 'Formula 1', sport: 'f1', price: 9900, thumbnail_url: 'https://img.youtube.com/vi/XSpSPBlcFp0/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=XSpSPBlcFp0', duration: '12:05', channel_name: 'FORMULA 1', channel_avatar: 'F', views: '2.8M', likes: '150K', tag: null, is_live: false, is_premium: false },
+  { title: "Hamilton's First Laps in the SF-26 — Fiorano Shakedown", category: 'Formula 1', sport: 'f1', price: 4900, thumbnail_url: 'https://img.youtube.com/vi/nRBrgvVoBBk/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=nRBrgvVoBBk', duration: '4:33', channel_name: 'FORMULA 1', channel_avatar: 'F', views: '4.1M', likes: '220K', tag: null, is_live: false, is_premium: false },
   // Olympics (16-17)
   { title: 'Milano Cortina 2026 Opening Ceremony — Full Highlights', category: 'Olympics', sport: 'olympics', price: 19900, thumbnail_url: 'https://img.youtube.com/vi/ksG9O8PHXbI/hqdefault.jpg', video_url: 'https://www.youtube.com/results?search_query=winter+olympics+2026+opening+ceremony+highlights', duration: '28:40', channel_name: 'Olympics', channel_avatar: 'O', views: '12M', likes: '580K', tag: null, is_live: false, is_premium: false },
   { title: 'Figure Skating Team Event — Stunning Performances', category: 'Olympics', sport: 'olympics', price: 7900, thumbnail_url: 'https://img.youtube.com/vi/LA2j4Du1PHs/hqdefault.jpg', video_url: 'https://www.youtube.com/results?search_query=winter+olympics+2026+figure+skating+highlights', duration: '15:22', channel_name: 'Olympics', channel_avatar: 'O', views: '3.8M', likes: '190K', tag: null, is_live: false, is_premium: false },
@@ -200,7 +200,7 @@ async function initDB() {
         WHERE id NOT IN (SELECT user_id FROM wallets)
       `);
 
-      // Seed videos if table is empty
+      // Seed videos if table is empty, otherwise sync thumbnail/video URLs
       const countResult = await client.query('SELECT COUNT(*) FROM videos');
       if (parseInt(countResult.rows[0].count) === 0) {
         for (const v of VIDEO_SEED_DATA) {
@@ -211,6 +211,15 @@ async function initDB() {
           );
         }
         console.log(`  Seeded ${VIDEO_SEED_DATA.length} videos`);
+      } else {
+        // Sync seed data (thumbnails, video URLs) with existing rows
+        for (let i = 0; i < VIDEO_SEED_DATA.length; i++) {
+          const v = VIDEO_SEED_DATA[i];
+          await client.query(
+            `UPDATE videos SET thumbnail_url = $1, video_url = $2 WHERE id = $3`,
+            [v.thumbnail_url, v.video_url, i + 1]
+          );
+        }
       }
 
       dbReady = true;

@@ -490,8 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (result.ok) {
           closeAuthModal(overlay);
           await fetchVideos();
-          showToast(`Account created! Activate your account to start watching.`, 'success');
-          setTimeout(() => openPaymentModal(), 400);
+          showToast(`Account created! Welcome to Arena Sports!`, 'success');
         } else {
           errEl.textContent = result.error || 'Something went wrong';
           errEl.style.display = 'block';
@@ -1541,11 +1540,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (!video.purchased) {
-      showToast('Please purchase this video first', 'info');
-      return;
-    }
-
     if (!video.video_url) {
       showToast('Video URL not available', 'info');
       return;
@@ -1672,56 +1666,203 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <!-- Profile Header -->
         <div class="profile-header" style="display: flex; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
-          <div class="profile-avatar" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--accent), #6aad2d); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: #111; flex-shrink: 0;">
+          <div class="profile-avatar" id="profile-avatar-display" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--accent), #6aad2d); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: #111; flex-shrink: 0;">
             ${currentUser.username.charAt(0).toUpperCase()}
           </div>
           <div style="flex: 1;">
-            <h2 style="margin: 0 0 8px; font-size: 28px;">${currentUser.username}</h2>
-            <p style="margin: 0 0 8px; color: rgba(255,255,255,0.6); font-size: 14px;">${currentUser.email}</p>
-            <div style="display: flex; gap: 12px; align-items: center;">
-              <span class="profile-status-badge" style="padding: 4px 12px; background: ${currentUser.payment_status === 'paid' ? 'rgba(133,199,66,0.15)' : 'rgba(255,255,255,0.1)'}; border: 1px solid ${currentUser.payment_status === 'paid' ? 'rgba(133,199,66,0.3)' : 'rgba(255,255,255,0.2)'}; border-radius: 12px; font-size: 12px; font-weight: 600; color: ${currentUser.payment_status === 'paid' ? 'var(--accent)' : 'rgba(255,255,255,0.5)'}; text-transform: uppercase; letter-spacing: 0.5px;">
-                ${currentUser.payment_status === 'paid' ? '✓ Premium Active' : 'Free Plan'}
-              </span>
-              <span style="padding: 4px 12px; background: rgba(255,255,255,0.05); border-radius: 12px; font-size: 12px; color: rgba(255,255,255,0.5);">
-                💰 Wallet: ₹${walletBalanceRupees}
-              </span>
+            <h2 id="profile-username-display" style="margin: 0 0 8px; font-size: 28px;">${currentUser.username}</h2>
+            <p id="profile-email-display" style="margin: 0 0 8px; color: rgba(255,255,255,0.6); font-size: 14px;">${currentUser.email}</p>
+            <span style="padding: 4px 12px; background: rgba(255,255,255,0.05); border-radius: 12px; font-size: 12px; color: rgba(255,255,255,0.5);">
+              Wallet: ₹${walletBalanceRupees}
+            </span>
+          </div>
+        </div>
+
+        <!-- Profile Tabs -->
+        <div style="display: flex; gap: 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
+          <button class="profile-tab active" data-profile-tab="details" style="padding: 10px 20px; background: none; border: none; border-bottom: 2px solid var(--accent); color: var(--accent); font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">Account Details</button>
+          <button class="profile-tab" data-profile-tab="videos" style="padding: 10px 20px; background: none; border: none; border-bottom: 2px solid transparent; color: rgba(255,255,255,0.5); font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">My Videos</button>
+          <button class="profile-tab" data-profile-tab="password" style="padding: 10px 20px; background: none; border: none; border-bottom: 2px solid transparent; color: rgba(255,255,255,0.5); font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">Change Password</button>
+        </div>
+
+        <!-- Tab Content: Account Details -->
+        <div class="profile-tab-content" data-profile-content="details" style="flex: 1; overflow-y: auto;">
+          <form id="profile-details-form" style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="auth-field">
+              <label class="auth-label" style="margin-bottom: 6px; display: block; font-size: 13px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Username</label>
+              <input type="text" class="auth-input" name="username" value="${currentUser.username}" style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 15px; outline: none; transition: border-color 0.2s;">
+            </div>
+            <div class="auth-field">
+              <label class="auth-label" style="margin-bottom: 6px; display: block; font-size: 13px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Email</label>
+              <input type="email" class="auth-input" name="email" value="${currentUser.email}" style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 15px; outline: none; transition: border-color 0.2s;">
+            </div>
+            <div class="auth-field">
+              <label class="auth-label" style="margin-bottom: 6px; display: block; font-size: 13px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Member Since</label>
+              <input type="text" class="auth-input" value="${new Date(currentUser.created_at || Date.now()).toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' })}" disabled style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; color: rgba(255,255,255,0.4); font-size: 15px; cursor: not-allowed;">
+            </div>
+            <div class="profile-save-msg" style="display:none; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;"></div>
+            <button type="submit" class="auth-submit-btn" style="padding: 14px; background: linear-gradient(135deg, var(--accent), #6aad2d); color: #111; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.2s;">Save Changes</button>
+          </form>
+        </div>
+
+        <!-- Tab Content: My Videos -->
+        <div class="profile-tab-content" data-profile-content="videos" style="flex: 1; overflow-y: auto; display: none;">
+          <div class="purchased-videos-list" style="min-height: 200px;">
+            <div style="text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.5);">
+              <div style="margin-bottom: 12px; font-size: 14px;">Loading your videos...</div>
             </div>
           </div>
         </div>
 
-        <!-- Stats Section -->
-        <div class="profile-stats" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
-          <div class="stat-card" style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; text-align: center;">
-            <div class="stat-value" style="font-size: 24px; font-weight: 700; color: var(--accent); margin-bottom: 4px;">-</div>
-            <div class="stat-label" style="font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px;">Videos Owned</div>
-          </div>
-          <div class="stat-card" style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; text-align: center;">
-            <div class="stat-value" style="font-size: 24px; font-weight: 700; color: var(--accent); margin-bottom: 4px;">-</div>
-            <div class="stat-label" style="font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px;">Total Spent</div>
-          </div>
-          <div class="stat-card" style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; text-align: center;">
-            <div class="stat-value" style="font-size: 24px; font-weight: 700; color: var(--accent); margin-bottom: 4px;">Lifetime</div>
-            <div class="stat-label" style="font-size: 12px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px;">Access</div>
-          </div>
-        </div>
-
-        <!-- Purchased Videos Section -->
-        <div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
-          <h3 style="margin: 0; font-size: 18px; font-weight: 600;">📹 My Purchased Videos</h3>
-        </div>
-
-        <div class="purchased-videos-list" style="flex: 1; overflow-y: auto; min-height: 200px;">
-          <div class="loading-spinner" style="text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.5);">
-            <div style="margin-bottom: 12px; font-size: 14px;">Loading your purchases...</div>
-          </div>
+        <!-- Tab Content: Change Password -->
+        <div class="profile-tab-content" data-profile-content="password" style="flex: 1; overflow-y: auto; display: none;">
+          <form id="profile-password-form" style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="auth-field">
+              <label class="auth-label" style="margin-bottom: 6px; display: block; font-size: 13px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Current Password</label>
+              <input type="password" class="auth-input" name="currentPassword" placeholder="Enter current password" required style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 15px; outline: none;">
+            </div>
+            <div class="auth-field">
+              <label class="auth-label" style="margin-bottom: 6px; display: block; font-size: 13px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">New Password</label>
+              <input type="password" class="auth-input" name="newPassword" placeholder="Enter new password (min 6 chars)" required minlength="6" style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 15px; outline: none;">
+            </div>
+            <div class="auth-field">
+              <label class="auth-label" style="margin-bottom: 6px; display: block; font-size: 13px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px;">Confirm New Password</label>
+              <input type="password" class="auth-input" name="confirmPassword" placeholder="Confirm new password" required minlength="6" style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 15px; outline: none;">
+            </div>
+            <div class="password-save-msg" style="display:none; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;"></div>
+            <button type="submit" class="auth-submit-btn" style="padding: 14px; background: linear-gradient(135deg, var(--accent), #6aad2d); color: #111; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.2s;">Update Password</button>
+          </form>
         </div>
       </div>
     `;
 
     document.body.appendChild(overlay);
 
+    // Tab switching
+    overlay.querySelectorAll('.profile-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        overlay.querySelectorAll('.profile-tab').forEach(t => {
+          t.classList.remove('active');
+          t.style.borderBottomColor = 'transparent';
+          t.style.color = 'rgba(255,255,255,0.5)';
+        });
+        tab.classList.add('active');
+        tab.style.borderBottomColor = 'var(--accent)';
+        tab.style.color = 'var(--accent)';
+        const target = tab.dataset.profileTab;
+        overlay.querySelectorAll('.profile-tab-content').forEach(c => c.style.display = 'none');
+        overlay.querySelector(`[data-profile-content="${target}"]`).style.display = '';
+        if (target === 'videos') loadPurchasedVideos();
+      });
+    });
+
+    // Account details form submit
+    overlay.querySelector('#profile-details-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const btn = form.querySelector('.auth-submit-btn');
+      const msgEl = form.querySelector('.profile-save-msg');
+      const newUsername = form.username.value.trim();
+      const newEmail = form.email.value.trim();
+
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      msgEl.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ username: newUsername, email: newEmail })
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          msgEl.textContent = data.message || 'Profile updated successfully!';
+          msgEl.style.display = 'block';
+          msgEl.style.background = 'rgba(133,199,66,0.15)';
+          msgEl.style.color = 'var(--accent)';
+          if (data.user) {
+            currentUser.username = data.user.username;
+            currentUser.email = data.user.email;
+            overlay.querySelector('#profile-username-display').textContent = data.user.username;
+            overlay.querySelector('#profile-email-display').textContent = data.user.email;
+            overlay.querySelector('#profile-avatar-display').textContent = data.user.username.charAt(0).toUpperCase();
+            updateHeaderForAuth();
+          }
+        } else {
+          msgEl.textContent = data.error || 'Failed to update';
+          msgEl.style.display = 'block';
+          msgEl.style.background = 'rgba(255,107,107,0.15)';
+          msgEl.style.color = '#ff6b6b';
+        }
+      } catch (err) {
+        msgEl.textContent = 'Connection error. Please try again.';
+        msgEl.style.display = 'block';
+        msgEl.style.background = 'rgba(255,107,107,0.15)';
+        msgEl.style.color = '#ff6b6b';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Changes';
+      }
+    });
+
+    // Password form submit
+    overlay.querySelector('#profile-password-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const btn = form.querySelector('.auth-submit-btn');
+      const msgEl = form.querySelector('.password-save-msg');
+      const currentPassword = form.currentPassword.value;
+      const newPassword = form.newPassword.value;
+      const confirmPassword = form.confirmPassword.value;
+
+      if (newPassword !== confirmPassword) {
+        msgEl.textContent = 'New passwords do not match';
+        msgEl.style.display = 'block';
+        msgEl.style.background = 'rgba(255,107,107,0.15)';
+        msgEl.style.color = '#ff6b6b';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Updating...';
+      msgEl.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ currentPassword, newPassword })
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          msgEl.textContent = 'Password updated successfully!';
+          msgEl.style.display = 'block';
+          msgEl.style.background = 'rgba(133,199,66,0.15)';
+          msgEl.style.color = 'var(--accent)';
+          form.reset();
+        } else {
+          msgEl.textContent = data.error || 'Failed to update password';
+          msgEl.style.display = 'block';
+          msgEl.style.background = 'rgba(255,107,107,0.15)';
+          msgEl.style.color = '#ff6b6b';
+        }
+      } catch (err) {
+        msgEl.textContent = 'Connection error. Please try again.';
+        msgEl.style.display = 'block';
+        msgEl.style.background = 'rgba(255,107,107,0.15)';
+        msgEl.style.color = '#ff6b6b';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Update Password';
+      }
+    });
+
     const purchasedVideosList = overlay.querySelector('.purchased-videos-list');
-    const statCards = overlay.querySelectorAll('.stat-value');
 
     // Fetch purchased videos
     async function loadPurchasedVideos() {
@@ -1731,13 +1872,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (data.ok) {
           const purchases = data.purchases;
-
-          // Update stats
-          const totalVideos = purchases.length;
-          const totalSpent = purchases.reduce((sum, p) => sum + p.payment_amount, 0);
-
-          statCards[0].textContent = totalVideos;
-          statCards[1].textContent = `₹${Math.round(totalSpent / 100)}`;
 
           if (purchases.length === 0) {
             purchasedVideosList.innerHTML = `
@@ -1750,89 +1884,40 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             purchasedVideosList.innerHTML = purchases.map(purchase => {
               const purchaseDate = new Date(purchase.purchased_at);
-              const formattedDate = purchaseDate.toLocaleDateString('en-IN', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-              });
-              const paymentMethod = purchase.payment_method === 'wallet' ? '💰 Wallet' : '💳 Direct Payment';
+              const formattedDate = purchaseDate.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+              const paymentMethod = purchase.payment_method === 'wallet' ? 'Wallet' : 'Direct';
 
               return `
-                <div class="purchased-video-item" style="display: flex; gap: 16px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 12px; transition: all 0.2s; cursor: pointer;" data-video-id="${purchase.video_id}">
-                  <img src="${purchase.thumbnail_url}" style="width: 180px; height: 100px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+                <div class="purchased-video-item" style="display: flex; gap: 16px; padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 10px; transition: all 0.2s; cursor: pointer;" data-video-id="${purchase.video_id}">
+                  <img src="${purchase.thumbnail_url}" style="width: 140px; height: 80px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
                   <div style="flex: 1; min-width: 0;">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                      <div style="flex: 1; min-width: 0;">
-                        <h4 style="margin: 0 0 6px; font-size: 16px; font-weight: 600; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${purchase.title}</h4>
-                        <div style="font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 4px;">
-                          <span style="color: var(--accent);">${purchase.category}</span>
-                          ${purchase.duration ? ` • ${purchase.duration}` : ''}
-                          ${purchase.channel_name ? ` • ${purchase.channel_name}` : ''}
-                        </div>
-                      </div>
-                      <div style="text-align: right; margin-left: 12px; flex-shrink: 0;">
-                        <div style="font-size: 18px; font-weight: 700; color: var(--accent); margin-bottom: 4px;">₹${Math.round(purchase.payment_amount / 100)}</div>
-                        <div style="font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px;">${paymentMethod}</div>
-                      </div>
-                    </div>
-                    <div style="display: flex; gap: 12px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05);">
-                      <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,0.5);">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <circle cx="12" cy="12" r="10"/>
-                          <polyline points="12 6 12 12 16 14"/>
-                        </svg>
-                        Purchased ${formattedDate}
-                      </div>
-                      <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--accent); font-weight: 600;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                          <polyline points="22 4 12 14.01 9 11.01"/>
-                        </svg>
-                        Lifetime Access
-                      </div>
+                    <h4 style="margin: 0 0 6px; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${purchase.title}</h4>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.5);">
+                      <span style="color: var(--accent);">${purchase.category}</span>
+                      ${purchase.duration ? ` · ${purchase.duration}` : ''}
+                      · ${paymentMethod} · ${formattedDate}
                     </div>
                   </div>
                 </div>
               `;
             }).join('');
 
-            // Add click handlers to watch videos
             purchasedVideosList.querySelectorAll('.purchased-video-item').forEach(item => {
               item.addEventListener('click', () => {
                 const videoId = parseInt(item.dataset.videoId);
                 overlay.remove();
                 setTimeout(() => openVideoPlayer(videoId), 200);
               });
-
-              // Hover effect
-              item.addEventListener('mouseenter', () => {
-                item.style.background = 'rgba(255,255,255,0.06)';
-                item.style.borderColor = 'rgba(133,199,66,0.2)';
-                item.style.transform = 'translateY(-2px)';
-              });
-              item.addEventListener('mouseleave', () => {
-                item.style.background = 'rgba(255,255,255,0.03)';
-                item.style.borderColor = 'rgba(255,255,255,0.05)';
-                item.style.transform = 'translateY(0)';
-              });
+              item.addEventListener('mouseenter', () => { item.style.background = 'rgba(255,255,255,0.06)'; item.style.borderColor = 'rgba(133,199,66,0.2)'; });
+              item.addEventListener('mouseleave', () => { item.style.background = 'rgba(255,255,255,0.03)'; item.style.borderColor = 'rgba(255,255,255,0.05)'; });
             });
           }
         } else {
-          purchasedVideosList.innerHTML = `
-            <div style="text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.5);">
-              <div style="font-size: 16px; color: #ff6b6b;">Failed to load purchases</div>
-              <div style="font-size: 13px; margin-top: 8px;">${data.error || 'Please try again'}</div>
-            </div>
-          `;
+          purchasedVideosList.innerHTML = `<div style="text-align:center;padding:40px;color:#ff6b6b;">Failed to load videos</div>`;
         }
       } catch (err) {
         console.error('Error loading purchases:', err);
-        purchasedVideosList.innerHTML = `
-          <div style="text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.5);">
-            <div style="font-size: 16px; color: #ff6b6b;">Error loading purchases</div>
-            <div style="font-size: 13px; margin-top: 8px;">Please check your connection and try again</div>
-          </div>
-        `;
+        purchasedVideosList.innerHTML = `<div style="text-align:center;padding:40px;color:#ff6b6b;">Error loading videos</div>`;
       }
     }
 
@@ -1846,9 +1931,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Animate in
     requestAnimationFrame(() => overlay.classList.add('show'));
-
-    // Load purchased videos
-    loadPurchasedVideos();
   }
 
   // Open Transaction History Modal

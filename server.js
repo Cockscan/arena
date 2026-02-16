@@ -245,6 +245,78 @@ app.post('/api/signout', (req, res) => {
   return res.json({ ok: true });
 });
 
+// PUT /api/profile — update user profile
+app.put('/api/profile', authenticateToken, async (req, res) => {
+  if (!req.user) return res.status(401).json({ ok: false, error: 'Please sign in first' });
+
+  const { username, email, currentPassword, newPassword } = req.body;
+
+  try {
+    if (isDBReady()) {
+      // Get current user
+      const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+      if (userResult.rows.length === 0) return res.status(404).json({ ok: false, error: 'User not found' });
+      const user = userResult.rows[0];
+
+      // Build update fields
+      const updates = [];
+      const values = [];
+      let paramIndex = 1;
+
+      if (username && username.trim() !== user.username) {
+        const trimmed = username.trim();
+        if (trimmed.length < 3) return res.status(400).json({ ok: false, error: 'Username must be at least 3 characters' });
+        const existing = await pool.query('SELECT id FROM users WHERE LOWER(username) = LOWER($1) AND id != $2', [trimmed, req.user.id]);
+        if (existing.rows.length > 0) return res.status(400).json({ ok: false, error: 'This username is already taken' });
+        updates.push(`username = $${paramIndex++}`);
+        values.push(trimmed);
+      }
+
+      if (email && email.trim().toLowerCase() !== user.email) {
+        const trimmed = email.trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return res.status(400).json({ ok: false, error: 'Please enter a valid email' });
+        const existing = await pool.query('SELECT id FROM users WHERE email = $1 AND id != $2', [trimmed, req.user.id]);
+        if (existing.rows.length > 0) return res.status(400).json({ ok: false, error: 'This email is already in use' });
+        updates.push(`email = $${paramIndex++}`);
+        values.push(trimmed);
+      }
+
+      if (newPassword) {
+        if (!currentPassword) return res.status(400).json({ ok: false, error: 'Current password is required to set a new password' });
+        const validPassword = await bcrypt.compare(currentPassword, user.password_hash);
+        if (!validPassword) return res.status(400).json({ ok: false, error: 'Current password is incorrect' });
+        if (newPassword.length < 6) return res.status(400).json({ ok: false, error: 'New password must be at least 6 characters' });
+        const newHash = await bcrypt.hash(newPassword, 12);
+        updates.push(`password_hash = $${paramIndex++}`);
+        values.push(newHash);
+      }
+
+      if (updates.length === 0) return res.json({ ok: true, message: 'No changes to save' });
+
+      values.push(req.user.id);
+      await pool.query(`UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex}`, values);
+
+      // Get updated user and issue new token
+      const updatedResult = await pool.query('SELECT id, username, email, payment_status FROM users WHERE id = $1', [req.user.id]);
+      const updated = updatedResult.rows[0];
+
+      const token = jwt.sign(
+        { id: updated.id, username: updated.username, email: updated.email, payment_status: updated.payment_status },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      res.cookie('arena_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+
+      return res.json({ ok: true, message: 'Profile updated successfully', user: updated });
+    } else {
+      return res.status(500).json({ ok: false, error: 'Database not available' });
+    }
+  } catch (err) {
+    console.error('Profile update error:', err);
+    return res.status(500).json({ ok: false, error: 'Failed to update profile' });
+  }
+});
+
 // ══════════════════════════════════════════
 //  VIDEO API ROUTES
 // ══════════════════════════════════════════

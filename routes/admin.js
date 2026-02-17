@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const { pool, isDBReady } = require('../db');
-const { isR2Ready, generateUploadKey, uploadFile, uploadLargeFile, deleteFile, getPublicUrl } = require('../services/r2');
+const { isR2Ready, generateUploadKey, uploadFile, uploadLargeFile, downloadFile, deleteFile, getPublicUrl } = require('../services/r2');
 const { generateThumbnail, getVideoDuration } = require('../services/thumbnail');
 
 const router = express.Router();
@@ -441,7 +441,42 @@ router.post('/videos/:id/regenerate-thumbnail', adminAuth, async (req, res) => {
     if (!isDBReady()) return res.status(503).json({ ok: false, error: 'Database not available' });
     if (!isR2Ready()) return res.status(503).json({ ok: false, error: 'Storage (R2) not configured' });
 
-    return res.status(501).json({ ok: false, error: 'Thumbnail regeneration requires re-downloading the video. Use the admin panel to upload a new thumbnail.' });
+    const { id } = req.params;
+    const videoResult = await pool.query('SELECT * FROM videos WHERE id = $1', [parseInt(id)]);
+    if (videoResult.rows.length === 0) {
+      return res.status(404).json({ ok: false, error: 'Video not found' });
+    }
+
+    const video = videoResult.rows[0];
+    if (!video.file_key) {
+      return res.status(400).json({ ok: false, error: 'No video file to generate thumbnail from' });
+    }
+
+    // Download video from R2
+    const videoBuffer = await downloadFile(video.file_key);
+
+    // Generate thumbnail
+    const thumbBuffer = await generateThumbnail(videoBuffer);
+    if (!thumbBuffer) {
+      return res.status(500).json({ ok: false, error: 'Thumbnail generation failed — ffmpeg may not be available' });
+    }
+
+    // Delete old thumbnail from R2 if exists
+    if (video.thumbnail_key) {
+      try { await deleteFile(video.thumbnail_key); } catch (e) { /* ignore */ }
+    }
+
+    // Upload new thumbnail
+    const thumbnailKey = generateUploadKey('thumbnails', `video-${id}.jpg`);
+    const thumbnailUrl = await uploadFile(thumbBuffer, thumbnailKey, 'image/jpeg');
+
+    // Update database
+    await pool.query(
+      'UPDATE videos SET thumbnail_url = $1, thumbnail_key = $2 WHERE id = $3',
+      [thumbnailUrl, thumbnailKey, parseInt(id)]
+    );
+
+    return res.json({ ok: true, thumbnail_url: thumbnailUrl });
   } catch (err) {
     console.error('Admin regenerate thumbnail error:', err);
     return res.status(500).json({ ok: false, error: 'Could not regenerate thumbnail' });

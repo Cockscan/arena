@@ -1,4 +1,4 @@
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
 const crypto = require('crypto');
 const path = require('path');
@@ -68,6 +68,22 @@ async function uploadLargeFile(buffer, key, contentType) {
   return getPublicUrl(key);
 }
 
+async function downloadFile(key) {
+  if (!s3Client) throw new Error('R2 not configured');
+
+  const command = new GetObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: key,
+  });
+
+  const response = await s3Client.send(command);
+  const chunks = [];
+  for await (const chunk of response.Body) {
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+}
+
 async function deleteFile(key) {
   if (!s3Client) throw new Error('R2 not configured');
 
@@ -91,6 +107,7 @@ module.exports = {
   generateUploadKey,
   uploadFile,
   uploadLargeFile,
+  downloadFile,
   deleteFile,
   getPublicUrl,
 };

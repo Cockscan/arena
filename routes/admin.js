@@ -300,6 +300,16 @@ router.post('/videos/upload', adminAuth, upload.single('video'), async (req, res
     if (thumbBuffer) {
       thumbnailKey = generateUploadKey('thumbnails', originalName.replace(/\.[^.]+$/, '.jpg'));
       thumbnailUrl = await uploadFile(thumbBuffer, thumbnailKey, 'image/jpeg');
+    } else {
+      // Generate a simple SVG placeholder thumbnail and upload it
+      const placeholderSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+        <rect width="1280" height="720" fill="#1f2326"/>
+        <polygon points="600,300 600,420 700,360" fill="#85c742" opacity="0.8"/>
+        <text x="640" y="500" text-anchor="middle" fill="#959da5" font-family="sans-serif" font-size="24">${title.trim().substring(0, 40)}</text>
+      </svg>`;
+      const placeholderBuffer = Buffer.from(placeholderSvg, 'utf-8');
+      thumbnailKey = generateUploadKey('thumbnails', 'placeholder.svg');
+      thumbnailUrl = await uploadFile(placeholderBuffer, thumbnailKey, 'image/svg+xml');
     }
 
     // 3. Get video duration

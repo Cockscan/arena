@@ -1,6 +1,6 @@
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const path = require('path');
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || '';
@@ -32,7 +32,7 @@ function generateUploadKey(folder, originalFilename) {
   const sanitized = path.basename(originalFilename, ext)
     .replace(/[^a-zA-Z0-9_-]/g, '_')
     .substring(0, 50);
-  return `${folder}/${uuidv4()}-${sanitized}${ext}`;
+  return `${folder}/${crypto.randomUUID()}-${sanitized}${ext}`;
 }
 
 async function uploadFile(buffer, key, contentType) {

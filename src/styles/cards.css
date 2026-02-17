@@ -35,6 +35,9 @@
   position: relative;
   aspect-ratio: 16/9;
   overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--bg-secondary);
 }
 
 .video-thumb img {

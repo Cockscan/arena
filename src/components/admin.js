@@ -105,6 +105,8 @@
       case 'dashboard': renderDashboard(content); break;
       case 'categories': renderCategories(content); break;
       case 'videos': renderVideos(content); break;
+      case 'users': renderUsers(content); break;
+      case 'transactions': renderTransactions(content); break;
     }
   }
 
@@ -618,6 +620,166 @@
     if (data.ok) await loadVideos();
     else alert(data.error || 'Error deleting video');
   };
+
+  // ══════════════════════════════════════════
+  //  USERS
+  // ══════════════════════════════════════════
+
+  async function renderUsers(container) {
+    container.innerHTML = `
+      <div class="page-header"><h1>Registered Users</h1></div>
+      <div class="data-table">
+        <div class="table-header-row">
+          <span class="th" style="flex:2">User</span>
+          <span class="th" style="flex:2">Email</span>
+          <span class="th" style="flex:1">Wallet</span>
+          <span class="th" style="flex:1">Purchases</span>
+          <span class="th" style="flex:1">Status</span>
+          <span class="th" style="flex:1.5">Joined</span>
+        </div>
+        <div class="table-body" id="users-list">
+          <div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">Loading...</div></div>
+        </div>
+      </div>
+    `;
+
+    const data = await api('/users');
+    if (!data.ok) return;
+
+    const list = document.getElementById('users-list');
+
+    if (data.users.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">👤</div><div class="empty-text">No registered users yet</div></div>`;
+      return;
+    }
+
+    list.innerHTML = data.users.map(u => {
+      const joined = new Date(u.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      const walletBal = (parseInt(u.wallet_balance) / 100).toFixed(2);
+      return `
+        <div class="table-row">
+          <span class="td" style="flex:2"><strong>${escHtml(u.username)}</strong></span>
+          <span class="td" style="flex:2">${escHtml(u.email)}</span>
+          <span class="td" style="flex:1">₹${walletBal}</span>
+          <span class="td" style="flex:1">${u.total_purchases}</span>
+          <span class="td" style="flex:1"><span class="row-badge ${u.payment_status === 'paid' ? 'badge-active' : 'badge-inactive'}">${u.payment_status || 'pending'}</span></span>
+          <span class="td" style="flex:1.5">${joined}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ══════════════════════════════════════════
+  //  TRANSACTIONS
+  // ══════════════════════════════════════════
+
+  async function renderTransactions(container) {
+    container.innerHTML = `
+      <div class="page-header"><h1>Transactions</h1></div>
+      <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+        <button class="btn btn-primary btn-sm tab-btn active" data-tab="purchases">Video Purchases</button>
+        <button class="btn btn-secondary btn-sm tab-btn" data-tab="wallet">Wallet Transactions</button>
+      </div>
+      <div id="transactions-content">
+        <div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">Loading...</div></div>
+      </div>
+    `;
+
+    const tabs = container.querySelectorAll('.tab-btn');
+    tabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabs.forEach(b => { b.classList.remove('active'); b.className = b.className.replace('btn-primary', 'btn-secondary'); });
+        btn.classList.add('active');
+        btn.className = btn.className.replace('btn-secondary', 'btn-primary');
+        loadTransactions(btn.dataset.tab);
+      });
+    });
+
+    await loadTransactions('purchases');
+  }
+
+  async function loadTransactions(type) {
+    const data = await api(`/transactions?type=${type}`);
+    if (!data.ok) return;
+
+    const content = document.getElementById('transactions-content');
+
+    if (type === 'purchases') {
+      const purchases = data.purchases;
+      if (purchases.length === 0) {
+        content.innerHTML = `<div class="empty-state"><div class="empty-icon">🛒</div><div class="empty-text">No purchases yet</div></div>`;
+        return;
+      }
+
+      content.innerHTML = `
+        <div class="data-table">
+          <div class="table-header-row">
+            <span class="th" style="flex:1.5">User</span>
+            <span class="th" style="flex:2">Video</span>
+            <span class="th" style="flex:1">Amount</span>
+            <span class="th" style="flex:1">Method</span>
+            <span class="th" style="flex:1">Payment ID</span>
+            <span class="th" style="flex:1.5">Date</span>
+          </div>
+          <div class="table-body">
+            ${purchases.map(p => {
+              const date = new Date(p.purchased_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+              const amount = (p.payment_amount / 100).toFixed(2);
+              return `
+                <div class="table-row">
+                  <span class="td" style="flex:1.5"><strong>${escHtml(p.username)}</strong></span>
+                  <span class="td" style="flex:2">${escHtml(p.video_title)}</span>
+                  <span class="td" style="flex:1">₹${amount}</span>
+                  <span class="td" style="flex:1"><span class="row-badge ${p.payment_method === 'wallet' ? 'badge-r2' : 'badge-active'}">${p.payment_method || 'razorpay'}</span></span>
+                  <span class="td" style="flex:1" title="${escHtml(p.payment_id)}">${escHtml((p.payment_id || '').substring(0, 12))}...</span>
+                  <span class="td" style="flex:1.5">${date}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    } else {
+      const txns = data.wallet_transactions;
+      if (txns.length === 0) {
+        content.innerHTML = `<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">No wallet transactions yet</div></div>`;
+        return;
+      }
+
+      content.innerHTML = `
+        <div class="data-table">
+          <div class="table-header-row">
+            <span class="th" style="flex:1.5">User</span>
+            <span class="th" style="flex:1">Type</span>
+            <span class="th" style="flex:1">Amount</span>
+            <span class="th" style="flex:1">Balance</span>
+            <span class="th" style="flex:1">Status</span>
+            <span class="th" style="flex:2">Description</span>
+            <span class="th" style="flex:1.5">Date</span>
+          </div>
+          <div class="table-body">
+            ${txns.map(t => {
+              const date = new Date(t.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+              const amount = (t.amount / 100).toFixed(2);
+              const balAfter = (t.balance_after / 100).toFixed(2);
+              const typeClass = t.type === 'DEPOSIT' ? 'badge-active' : t.type === 'PURCHASE' ? 'badge-youtube' : 'badge-r2';
+              return `
+                <div class="table-row">
+                  <span class="td" style="flex:1.5"><strong>${escHtml(t.username)}</strong></span>
+                  <span class="td" style="flex:1"><span class="row-badge ${typeClass}">${t.type}</span></span>
+                  <span class="td" style="flex:1">${t.type === 'DEPOSIT' ? '+' : '-'}₹${amount}</span>
+                  <span class="td" style="flex:1">₹${balAfter}</span>
+                  <span class="td" style="flex:1"><span class="row-badge ${t.status === 'completed' ? 'badge-active' : 'badge-inactive'}">${t.status}</span></span>
+                  <span class="td" style="flex:2">${escHtml(t.description || '-')}</span>
+                  <span class="td" style="flex:1.5">${date}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+  }
 
   // ══════════════════════════════════════════
   //  UTILS

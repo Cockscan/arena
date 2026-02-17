@@ -435,6 +435,77 @@ router.delete('/videos/:id', adminAuth, async (req, res) => {
   }
 });
 
+// ══════════════════════════════════════════
+//  USERS
+// ══════════════════════════════════════════
+
+router.get('/users', adminAuth, async (req, res) => {
+  try {
+    if (!isDBReady()) return res.status(503).json({ ok: false, error: 'Database not available' });
+
+    const result = await pool.query(`
+      SELECT u.id, u.username, u.email, u.payment_status, u.created_at,
+             COALESCE(w.balance, 0) as wallet_balance,
+             COUNT(p.id) as total_purchases
+      FROM users u
+      LEFT JOIN wallets w ON w.user_id = u.id
+      LEFT JOIN purchases p ON p.user_id = u.id
+      GROUP BY u.id, u.username, u.email, u.payment_status, u.created_at, w.balance
+      ORDER BY u.created_at DESC
+    `);
+
+    return res.json({ ok: true, users: result.rows });
+  } catch (err) {
+    console.error('Admin users error:', err);
+    return res.status(500).json({ ok: false, error: 'Could not load users' });
+  }
+});
+
+// ══════════════════════════════════════════
+//  TRANSACTIONS
+// ══════════════════════════════════════════
+
+router.get('/transactions', adminAuth, async (req, res) => {
+  try {
+    if (!isDBReady()) return res.status(503).json({ ok: false, error: 'Database not available' });
+
+    const { type } = req.query;
+
+    // Get video purchases
+    let purchases = [];
+    if (!type || type === 'purchases') {
+      const purchaseResult = await pool.query(`
+        SELECT p.id, p.payment_id, p.order_id, p.payment_amount, p.payment_method,
+               p.purchased_at, u.username, u.email, v.title as video_title
+        FROM purchases p
+        JOIN users u ON u.id = p.user_id
+        JOIN videos v ON v.id = p.video_id
+        ORDER BY p.purchased_at DESC
+      `);
+      purchases = purchaseResult.rows;
+    }
+
+    // Get wallet transactions
+    let walletTxns = [];
+    if (!type || type === 'wallet') {
+      const walletResult = await pool.query(`
+        SELECT wt.id, wt.type, wt.amount, wt.balance_before, wt.balance_after,
+               wt.payment_id, wt.description, wt.status, wt.created_at,
+               u.username, u.email
+        FROM wallet_transactions wt
+        JOIN users u ON u.id = wt.user_id
+        ORDER BY wt.created_at DESC
+      `);
+      walletTxns = walletResult.rows;
+    }
+
+    return res.json({ ok: true, purchases, wallet_transactions: walletTxns });
+  } catch (err) {
+    console.error('Admin transactions error:', err);
+    return res.status(500).json({ ok: false, error: 'Could not load transactions' });
+  }
+});
+
 // REGENERATE thumbnail
 router.post('/videos/:id/regenerate-thumbnail', adminAuth, async (req, res) => {
   try {

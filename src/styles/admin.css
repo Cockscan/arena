@@ -309,6 +309,34 @@ body {
 .badge-r2 { background: rgba(59,130,246,0.15); color: #3b82f6; }
 .badge-youtube { background: rgba(255,0,0,0.15); color: #ff4444; }
 
+/* ── Table Header Row ── */
+.table-header-row {
+  display: flex;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+  gap: 16px;
+}
+
+.table-header-row .th {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table-row .td {
+  font-size: 13px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Tab Buttons ── */
+.tab-btn { width: auto; }
+
 /* ── Video Grid ── */
 .video-grid {
   display: grid;

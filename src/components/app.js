@@ -824,10 +824,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="video-info">
                   <div class="video-title">${escapeHtml(video.title)}</div>
-                  <div class="video-meta">
-                    <span class="video-category">${escapeHtml(cat.name)}</span>
-                    ${video.tag ? `<span>${escapeHtml(video.tag)}</span>` : ''}
-                  </div>
                 </div>
               </a>
           `;

@@ -2,7 +2,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 
 /**
  * Generate a thumbnail from a video buffer.
@@ -11,8 +11,8 @@ const { v4: uuidv4 } = require('uuid');
  */
 async function generateThumbnail(videoBuffer) {
   const tmpDir = os.tmpdir();
-  const videoTmpPath = path.join(tmpDir, `arena_vid_${uuidv4()}.mp4`);
-  const thumbFilename = `arena_thumb_${uuidv4()}.jpg`;
+  const videoTmpPath = path.join(tmpDir, `arena_vid_${crypto.randomUUID()}.mp4`);
+  const thumbFilename = `arena_thumb_${crypto.randomUUID()}.jpg`;
   const thumbTmpPath = path.join(tmpDir, thumbFilename);
 
   try {
@@ -58,7 +58,7 @@ async function generateThumbnail(videoBuffer) {
  */
 async function getVideoDuration(videoBuffer) {
   const tmpDir = os.tmpdir();
-  const videoTmpPath = path.join(tmpDir, `arena_dur_${uuidv4()}.mp4`);
+  const videoTmpPath = path.join(tmpDir, `arena_dur_${crypto.randomUUID()}.mp4`);
 
   try {
     fs.writeFileSync(videoTmpPath, videoBuffer);

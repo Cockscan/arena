@@ -817,16 +817,16 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${tag}
                   ${liveDot}
                   ${premiumBadge}
-                  <span class="video-duration">${video.duration || ''}</span>
+                  <span class="video-duration">${video.duration && video.duration !== '0:00' ? video.duration : ''}</span>
+                  <div class="video-thumb-overlay">
+                    <div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></div>
+                  </div>
                 </div>
                 <div class="video-info">
-                  <div class="video-channel-avatar">${video.channel_avatar || 'A'}</div>
-                  <div class="video-details">
-                    <div class="video-title">${escapeHtml(video.title)}</div>
-                    <div class="video-meta">
-                      <span>${escapeHtml(video.channel_name || '')}</span>
-                      <span>${video.views || '0'} views</span>
-                    </div>
+                  <div class="video-title">${escapeHtml(video.title)}</div>
+                  <div class="video-meta">
+                    <span class="video-category">${escapeHtml(cat.name)}</span>
+                    ${video.tag ? `<span>${escapeHtml(video.tag)}</span>` : ''}
                   </div>
                 </div>
               </a>
@@ -1694,9 +1694,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <h2 style="margin: 0 0 6px; font-size: 20px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${video.title}</h2>
               <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                 <span style="padding: 3px 10px; background: rgba(133,199,66,0.15); border: 1px solid rgba(133,199,66,0.3); border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px;">${categoryLabel}</span>
-                ${video.duration ? `<span style="color: rgba(255,255,255,0.5); font-size: 13px;">${video.duration}</span>` : ''}
-                ${video.channel_name ? `<span style="color: rgba(255,255,255,0.5); font-size: 13px;">${video.channel_name}</span>` : ''}
-                <span style="color: rgba(255,255,255,0.5); font-size: 13px;">${video.views || ''}</span>
+                ${video.duration && video.duration !== '0:00' ? `<span style="color: rgba(255,255,255,0.5); font-size: 13px;">${video.duration}</span>` : ''}
               </div>
             </div>
           </div>

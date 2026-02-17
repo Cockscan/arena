@@ -336,8 +336,8 @@ router.post('/videos/upload', adminAuth, upload.single('video'), async (req, res
         thumbnailUrl || '',
         videoUrl,
         durationStr,
-        'Admin',
-        'A',
+        '', // channel_name (not used for R2 uploads)
+        '', // channel_avatar (not used for R2 uploads)
         '0',
         '0',
         tag || null,

@@ -12,53 +12,7 @@ if (process.env.DATABASE_URL) {
   });
 }
 
-// Seed data for all 33 videos (prices in paise)
-const VIDEO_SEED_DATA = [
-  // Football (1-4)
-  { title: 'Liverpool 1-2 Man City — Haaland 93rd Minute Winner!', category: 'Premier League', sport: 'football', price: 7900, thumbnail_url: 'https://img.youtube.com/vi/VJHvtNFXZcU/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=VJHvtNFXZcU', duration: '12:34', channel_name: 'Man City', channel_avatar: 'M', views: '4.2M', likes: '120K', tag: null, is_live: false, is_premium: false },
-  { title: 'Sunderland vs Liverpool — Full Match Highlights', category: 'Premier League', sport: 'football', price: 7900, thumbnail_url: 'https://img.youtube.com/vi/4Rh62rguksI/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=4Rh62rguksI', duration: '15:07', channel_name: 'NBC Sports', channel_avatar: 'N', views: '1.8M', likes: '48K', tag: null, is_live: false, is_premium: false },
-  { title: 'Champions League 2025/26 — Best Goals So Far', category: 'Champions League', sport: 'football', price: 9900, thumbnail_url: 'https://img.youtube.com/vi/rYmbj-bQ_eg/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=rYmbj-bQ_eg', duration: '08:45', channel_name: 'UEFA', channel_avatar: 'U', views: '6.1M', likes: '210K', tag: null, is_live: false, is_premium: false },
-  { title: 'Celta Vigo 2-4 Barcelona — Lewandowski Hat-Trick', category: 'La Liga', sport: 'football', price: 7900, thumbnail_url: 'https://img.youtube.com/vi/Rtd5qKulpRc/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=Rtd5qKulpRc', duration: '10:22', channel_name: 'LaLiga', channel_avatar: 'L', views: '2.4M', likes: '85K', tag: null, is_live: false, is_premium: false },
-  // Basketball (5-8)
-  { title: "NBA's Top 10 Plays of the Night — Insane Dunks & Clutch Shots", category: 'NBA', sport: 'basketball', price: 4900, thumbnail_url: 'https://img.youtube.com/vi/2sfKtkr5r3E/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=2sfKtkr5r3E', duration: '2:34', channel_name: 'NBA', channel_avatar: 'N', views: '2.1M', likes: '95K', tag: 'TRENDING', is_live: false, is_premium: false },
-  { title: 'Most Nasty Dunks of the 2025-26 Season — 60 Min Compilation', category: 'NBA', sport: 'basketball', price: 14900, thumbnail_url: 'https://img.youtube.com/vi/fcrO52NeETI/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=fcrO52NeETI', duration: '60:00', channel_name: 'NBA', channel_avatar: 'N', views: '5.6M', likes: '210K', tag: null, is_live: false, is_premium: false },
-  { title: 'The Top Dunks of Week 3 — 2025-26 NBA Season', category: 'NBA', sport: 'basketball', price: 4900, thumbnail_url: 'https://img.youtube.com/vi/JcJWZsmA8lQ/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=JcJWZsmA8lQ', duration: '20:40', channel_name: 'NBA', channel_avatar: 'N', views: '111K', likes: '5K', tag: null, is_live: false, is_premium: false },
-  { title: 'EuroLeague Top 10 Plays — Round 3 Best Moments', category: 'EuroLeague', sport: 'basketball', price: 4900, thumbnail_url: 'https://img.youtube.com/vi/CtbWw5ADUVU/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=CtbWw5ADUVU', duration: '3:50', channel_name: 'EuroLeague', channel_avatar: 'E', views: '680K', likes: '29K', tag: null, is_live: false, is_premium: false },
-  // Combat Sports (9-12)
-  { title: 'Greatest Knockouts From 2025 So Far — Official UFC', category: 'UFC', sport: 'combat', price: 14900, thumbnail_url: 'https://img.youtube.com/vi/LA2j4Du1PHs/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=LA2j4Du1PHs', duration: '43:12', channel_name: 'UFC', channel_avatar: 'U', views: '6.8M', likes: '280K', tag: 'VIRAL', is_live: false, is_premium: false },
-  { title: 'These Knockouts Are Stuck In My Head — Full Compilation', category: 'UFC', sport: 'combat', price: 14900, thumbnail_url: 'https://img.youtube.com/vi/VzvMuJ8qek8/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=VzvMuJ8qek8', duration: '58:20', channel_name: 'UFC', channel_avatar: 'U', views: '4.2M', likes: '150K', tag: null, is_live: false, is_premium: false },
-  { title: 'Greatest Finishes From Noche UFC — Best of the Night', category: 'UFC', sport: 'combat', price: 7900, thumbnail_url: 'https://img.youtube.com/vi/-5Z041ALmyg/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=-5Z041ALmyg', duration: '17:05', channel_name: 'UFC', channel_avatar: 'U', views: '1.9M', likes: '67K', tag: null, is_live: false, is_premium: false },
-  { title: 'Heavyweight Championship — Full Fight Highlights', category: 'Boxing', sport: 'combat', price: 14900, thumbnail_url: 'https://img.youtube.com/vi/VzvMuJ8qek8/hqdefault.jpg', video_url: 'https://www.youtube.com/results?search_query=boxing+heavyweight+championship+2025+highlights', duration: '22:10', channel_name: 'DAZN', channel_avatar: 'D', views: '1.8M', likes: '67K', tag: null, is_live: false, is_premium: true },
-  // Super Bowl (13)
-  { title: 'Seahawks vs Patriots — Full Game Highlights (29-13)', category: 'Super Bowl LX', sport: 'football', price: 19900, thumbnail_url: 'https://img.youtube.com/vi/ksG9O8PHXbI/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=ksG9O8PHXbI', duration: '23:10', channel_name: 'NFL', channel_avatar: 'N', views: '2.8M', likes: '180K', tag: 'MUST WATCH', is_live: false, is_premium: false },
-  // Formula 1 (14-15)
-  { title: "Ferrari SF-25 Reveal — First Look at Hamilton's New Car", category: 'Formula 1', sport: 'f1', price: 9900, thumbnail_url: 'https://cimg0.ibsrv.net/ibimg/hgm/1920x1080-1/100/956/2025-ferrari-sf-25-f1-race-car_100956872.jpg', video_url: 'https://www.youtube.com/results?search_query=ferrari+sf-25+reveal+hamilton+2025', duration: '12:05', channel_name: 'FORMULA 1', channel_avatar: 'F', views: '2.8M', likes: '150K', tag: null, is_live: false, is_premium: false },
-  { title: "Hamilton's First Laps in the SF-25 — Fiorano Shakedown", category: 'Formula 1', sport: 'f1', price: 4900, thumbnail_url: 'https://cdn.racingnews365.com/2025/Hamilton/_1092x683_crop_center-center_85_none/XPB_1326752_HiRes.jpg?v=1739998840', video_url: 'https://www.youtube.com/results?search_query=hamilton+ferrari+fiorano+shakedown+sf-25', duration: '4:33', channel_name: 'FORMULA 1', channel_avatar: 'F', views: '4.1M', likes: '220K', tag: null, is_live: false, is_premium: false },
-  // Olympics (16-17)
-  { title: 'Milano Cortina 2026 Opening Ceremony — Full Highlights', category: 'Olympics', sport: 'olympics', price: 19900, thumbnail_url: 'https://img.youtube.com/vi/ksG9O8PHXbI/hqdefault.jpg', video_url: 'https://www.youtube.com/results?search_query=winter+olympics+2026+opening+ceremony+highlights', duration: '28:40', channel_name: 'Olympics', channel_avatar: 'O', views: '12M', likes: '580K', tag: null, is_live: false, is_premium: false },
-  { title: 'Figure Skating Team Event — Stunning Performances', category: 'Olympics', sport: 'olympics', price: 7900, thumbnail_url: 'https://img.youtube.com/vi/LA2j4Du1PHs/hqdefault.jpg', video_url: 'https://www.youtube.com/results?search_query=winter+olympics+2026+figure+skating+highlights', duration: '15:22', channel_name: 'Olympics', channel_avatar: 'O', views: '3.8M', likes: '190K', tag: null, is_live: false, is_premium: false },
-  // Cricket (18-21)
-  { title: 'RCB vs PBKS — IPL 2025 Final Full Highlights', category: 'IPL 2025', sport: 'cricket', price: 19900, thumbnail_url: 'https://img.youtube.com/vi/uzUcaSSXvIw/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=uzUcaSSXvIw', duration: '22:15', channel_name: 'IPL', channel_avatar: 'I', views: '18M', likes: '820K', tag: 'MUST WATCH', is_live: false, is_premium: false },
-  { title: "Kohli's RCB End 18-Year Wait For Title — Celebration & Trophy Lift", category: 'IPL 2025', sport: 'cricket', price: 9900, thumbnail_url: 'https://img.youtube.com/vi/Zg_HiFPFipw/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=Zg_HiFPFipw', duration: '8:42', channel_name: 'N18', channel_avatar: 'N', views: '12M', likes: '650K', tag: null, is_live: false, is_premium: false },
-  { title: "ICC T20 World Cup 2026 — Suryakumar's Heroics Save India", category: 'T20 World Cup 2026', sport: 'cricket', price: 19900, thumbnail_url: 'https://img.youtube.com/vi/uzUcaSSXvIw/hqdefault.jpg', video_url: 'https://www.youtube.com/results?search_query=ICC+T20+World+Cup+2026+highlights+India', duration: '15:30', channel_name: 'ICC', channel_avatar: 'I', views: '8.4M', likes: '420K', tag: null, is_live: true, is_premium: false },
-  { title: "West Indies Beat England by 30 Runs — Rutherford 76* Masterclass", category: 'T20 World Cup 2026', sport: 'cricket', price: 7900, thumbnail_url: 'https://img.youtube.com/vi/F_8tVupeoos/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=F_8tVupeoos', duration: '12:18', channel_name: 'ICC', channel_avatar: 'I', views: '3.1M', likes: '95K', tag: null, is_live: false, is_premium: false },
-  // Kabaddi (22-24)
-  { title: 'U Mumba vs Bengaluru Bulls — PKL Season 12 Full Highlights', category: 'Pro Kabaddi S12', sport: 'kabaddi', price: 9900, thumbnail_url: 'https://img.youtube.com/vi/PV1YNd_asP4/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=PV1YNd_asP4', duration: '26:40', channel_name: 'PKL', channel_avatar: 'P', views: '4.2M', likes: '180K', tag: 'TRENDING', is_live: false, is_premium: false },
-  { title: "Bengaluru Bulls vs Dabang Delhi K.C. — Pawan Sehrawat's Raid Masterclass", category: 'Pro Kabaddi S12', sport: 'kabaddi', price: 7900, thumbnail_url: 'https://img.youtube.com/vi/frTDzB4Il0Q/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=frTDzB4Il0Q', duration: '24:15', channel_name: 'PKL', channel_avatar: 'P', views: '3.1M', likes: '145K', tag: null, is_live: false, is_premium: false },
-  { title: 'PKL Season 12 Grand Final — Dabang Delhi vs Puneri Paltan', category: 'Pro Kabaddi S12', sport: 'kabaddi', price: 14900, thumbnail_url: 'https://img.youtube.com/vi/PV1YNd_asP4/hqdefault.jpg', video_url: 'https://www.youtube.com/results?search_query=pro+kabaddi+season+12+final+highlights', duration: '32:10', channel_name: 'PKL', channel_avatar: 'P', views: '6.8M', likes: '310K', tag: null, is_live: false, is_premium: true },
-  // Badminton (25-27)
-  { title: 'PV Sindhu at India Open 2026 — Can She Reclaim Her Crown?', category: 'India Open 2026', sport: 'badminton', price: 9900, thumbnail_url: 'https://img.youtube.com/vi/rMQ3lvZiZRc/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=rMQ3lvZiZRc', duration: '18:24', channel_name: 'BWF', channel_avatar: 'B', views: '5.6M', likes: '280K', tag: 'FEATURED', is_live: false, is_premium: false },
-  { title: 'Lakshya Sen vs Viktor Axelsen — Paris 2024 Semi-Final Highlights', category: 'All England Open', sport: 'badminton', price: 7900, thumbnail_url: 'https://img.youtube.com/vi/h4mLMQyq7-M/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=h4mLMQyq7-M', duration: '15:08', channel_name: 'BWF', channel_avatar: 'B', views: '3.8M', likes: '190K', tag: null, is_live: false, is_premium: false },
-  { title: "Satwik-Chirag Dominate — India's World No. 1 Doubles Pair in Action", category: 'BWF Tour', sport: 'badminton', price: 4900, thumbnail_url: 'https://img.youtube.com/vi/rMQ3lvZiZRc/hqdefault.jpg', video_url: 'https://www.youtube.com/results?search_query=Satwik+Chirag+doubles+badminton+India+2026', duration: '12:45', channel_name: 'BWF', channel_avatar: 'B', views: '2.4M', likes: '120K', tag: null, is_live: false, is_premium: false },
-  // Hockey (28-30)
-  { title: 'India 4-1 Korea — Asia Cup Final Highlights | World Cup 2026 Qualified!', category: 'Asia Cup 2025', sport: 'hockey', price: 19900, thumbnail_url: 'https://img.youtube.com/vi/KvP8c8nd-4Y/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=KvP8c8nd-4Y', duration: '18:30', channel_name: 'Hockey India', channel_avatar: 'H', views: '8.2M', likes: '520K', tag: 'MUST WATCH', is_live: false, is_premium: false },
-  { title: 'India Wins Hockey Asia Cup After 8-Year Wait — Trophy Celebration', category: 'Asia Cup 2025', sport: 'hockey', price: 4900, thumbnail_url: 'https://img.youtube.com/vi/5jbj-RSZp_s/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=5jbj-RSZp_s', duration: '10:15', channel_name: 'Hockey India', channel_avatar: 'H', views: '5.1M', likes: '340K', tag: null, is_live: false, is_premium: false },
-  { title: 'Kalinga Lancers 3-2 Ranchi Royals — HIL 2026 Grand Final', category: 'Hockey India League', sport: 'hockey', price: 14900, thumbnail_url: 'https://img.youtube.com/vi/KvP8c8nd-4Y/hqdefault.jpg', video_url: 'https://www.youtube.com/results?search_query=Hockey+India+League+2026+final+highlights+Kalinga+Lancers', duration: '22:40', channel_name: 'HIL', channel_avatar: 'H', views: '2.8M', likes: '165K', tag: null, is_live: false, is_premium: true },
-  // ISL Football (31-33)
-  { title: 'Mohun Bagan Super Giant — ISL Season Highlights | Top Goals & Saves', category: 'ISL 2025-26', sport: 'isl', price: 9900, thumbnail_url: 'https://img.youtube.com/vi/AZtKB9QdltE/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=AZtKB9QdltE', duration: '12:30', channel_name: 'ISL', channel_avatar: 'I', views: '2.1M', likes: '95K', tag: 'TRENDING', is_live: false, is_premium: false },
-  { title: 'Kerala Blasters vs FC Goa — Jawaharlal Nehru Stadium on Fire!', category: 'ISL 2025-26', sport: 'isl', price: 4900, thumbnail_url: 'https://img.youtube.com/vi/FskiiCytTO4/maxresdefault.jpg', video_url: 'https://www.youtube.com/watch?v=FskiiCytTO4', duration: '10:45', channel_name: 'ISL', channel_avatar: 'I', views: '1.8M', likes: '78K', tag: null, is_live: false, is_premium: false },
-  { title: "Bengaluru FC's Title Challenge — Best Goals of the Season", category: 'ISL 2025-26', sport: 'isl', price: 4900, thumbnail_url: 'https://img.youtube.com/vi/AZtKB9QdltE/hqdefault.jpg', video_url: 'https://www.youtube.com/watch?v=AZtKB9QdltE', duration: '14:20', channel_name: 'ISL', channel_avatar: 'I', views: '1.2M', likes: '62K', tag: null, is_live: false, is_premium: false },
-];
+// No seed data — all videos are managed via admin panel uploads
 
 // Create tables and seed data
 async function initDB() {
@@ -200,26 +154,73 @@ async function initDB() {
         WHERE id NOT IN (SELECT user_id FROM wallets)
       `);
 
-      // Seed videos if table is empty, otherwise sync thumbnail/video URLs
-      const countResult = await client.query('SELECT COUNT(*) FROM videos');
-      if (parseInt(countResult.rows[0].count) === 0) {
-        for (const v of VIDEO_SEED_DATA) {
-          await client.query(
-            `INSERT INTO videos (title, category, sport, price, thumbnail_url, video_url, duration, channel_name, channel_avatar, views, likes, tag, is_live, is_premium)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
-            [v.title, v.category, v.sport, v.price, v.thumbnail_url, v.video_url, v.duration, v.channel_name, v.channel_avatar, v.views, v.likes, v.tag, v.is_live, v.is_premium]
-          );
-        }
-        console.log(`  Seeded ${VIDEO_SEED_DATA.length} videos`);
-      } else {
-        // Sync seed data (thumbnails, video URLs) with existing rows
-        for (let i = 0; i < VIDEO_SEED_DATA.length; i++) {
-          const v = VIDEO_SEED_DATA[i];
-          await client.query(
-            `UPDATE videos SET thumbnail_url = $1, video_url = $2 WHERE id = $3`,
-            [v.thumbnail_url, v.video_url, i + 1]
-          );
-        }
+      // ── Categories table ──
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS categories (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(100) NOT NULL UNIQUE,
+          slug VARCHAR(100) NOT NULL UNIQUE,
+          description TEXT,
+          icon VARCHAR(10),
+          sort_order INTEGER DEFAULT 0,
+          is_active BOOLEAN DEFAULT true,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `);
+
+      // Add new columns to videos table for self-hosted content
+      await client.query(`
+        DO $$ BEGIN
+          ALTER TABLE videos ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;
+          ALTER TABLE videos ADD COLUMN IF NOT EXISTS file_key VARCHAR(500);
+          ALTER TABLE videos ADD COLUMN IF NOT EXISTS thumbnail_key VARCHAR(500);
+          ALTER TABLE videos ADD COLUMN IF NOT EXISTS file_size BIGINT;
+          ALTER TABLE videos ADD COLUMN IF NOT EXISTS mime_type VARCHAR(100);
+          ALTER TABLE videos ADD COLUMN IF NOT EXISTS duration_seconds INTEGER;
+          ALTER TABLE videos ADD COLUMN IF NOT EXISTS upload_status VARCHAR(20) DEFAULT 'completed';
+          ALTER TABLE videos ADD COLUMN IF NOT EXISTS source_type VARCHAR(20) DEFAULT 'youtube';
+        END $$;
+      `);
+
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_videos_category_id ON videos(category_id);`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_videos_source_type ON videos(source_type);`);
+
+      // Seed default categories
+      const defaultCategories = [
+        { name: 'Football', slug: 'football', icon: '⚽', sort_order: 1 },
+        { name: 'Basketball', slug: 'basketball', icon: '🏀', sort_order: 2 },
+        { name: 'Combat Sports', slug: 'combat', icon: '🥊', sort_order: 3 },
+        { name: 'Cricket', slug: 'cricket', icon: '🏏', sort_order: 4 },
+        { name: 'Formula 1', slug: 'f1', icon: '🏎️', sort_order: 5 },
+        { name: 'Olympics', slug: 'olympics', icon: '🏅', sort_order: 6 },
+        { name: 'Kabaddi', slug: 'kabaddi', icon: '🤼', sort_order: 7 },
+        { name: 'Badminton', slug: 'badminton', icon: '🏸', sort_order: 8 },
+        { name: 'Hockey', slug: 'hockey', icon: '🏑', sort_order: 9 },
+        { name: 'ISL', slug: 'isl', icon: '⚽', sort_order: 10 },
+      ];
+
+      for (const cat of defaultCategories) {
+        await client.query(
+          `INSERT INTO categories (name, slug, icon, sort_order) VALUES ($1, $2, $3, $4) ON CONFLICT (slug) DO NOTHING`,
+          [cat.name, cat.slug, cat.icon, cat.sort_order]
+        );
+      }
+
+      // Link existing videos to categories by sport field
+      await client.query(`
+        UPDATE videos SET category_id = c.id
+        FROM categories c
+        WHERE videos.category_id IS NULL AND LOWER(videos.sport) = LOWER(c.slug)
+      `);
+
+      // Remove any old YouTube seed videos (migration — only admin-uploaded videos remain)
+      const deleteResult = await client.query(
+        `DELETE FROM videos WHERE source_type = 'youtube' OR source_type IS NULL`
+      );
+      if (deleteResult.rowCount > 0) {
+        console.log(`  Cleaned up ${deleteResult.rowCount} old YouTube seed videos`);
       }
 
       dbReady = true;
@@ -238,4 +239,4 @@ function isDBReady() {
   return dbReady && pool !== null;
 }
 
-module.exports = { pool, initDB, isDBReady, VIDEO_SEED_DATA };
+module.exports = { pool, initDB, isDBReady };

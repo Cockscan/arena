@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arena Sports — Admin Panel</title>
+  <link rel="stylesheet" href="/src/styles/admin.css">
+</head>
+<body>
+
+  <!-- Login Page -->
+  <div id="login-page" class="login-page">
+    <div class="login-box">
+      <h1>Arena Sports</h1>
+      <p class="subtitle">Admin Panel</p>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="admin-username" placeholder="Enter admin username" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="admin-password" placeholder="Enter admin password">
+      </div>
+      <button class="btn btn-primary" id="admin-login-btn">Sign In</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="admin-app" class="admin-layout" style="display: none;">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-brand">
+        <h2>Arena Sports</h2>
+        <span class="brand-sub">Admin Panel</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-item active" data-page="dashboard">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </div>
+        <div class="nav-item" data-page="categories">
+          <span class="nav-icon">📁</span>
+          <span>Categories</span>
+        </div>
+        <div class="nav-item" data-page="videos">
+          <span class="nav-icon">🎬</span>
+          <span>Videos</span>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="nav-item" id="admin-logout">
+          <span class="nav-icon">🚪</span>
+          <span>Logout</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/'">
+          <span class="nav-icon">🌐</span>
+          <span>View Site</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <div id="page-content"></div>
+    </main>
+  </div>
+
+  <script src="/src/components/admin.js"></script>
+</body>
+</html>

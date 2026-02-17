@@ -6,7 +6,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
-const { pool, initDB, isDBReady, VIDEO_SEED_DATA } = require('./db');
+const { pool, initDB, isDBReady } = require('./db');
+const adminRoutes = require('./routes/admin');
 
 require('dotenv').config();
 
@@ -27,7 +28,7 @@ if (RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
 
 // ── In-memory fallback store (for local dev without PostgreSQL) ──
 const memoryUsers = [];
-const memoryVideos = VIDEO_SEED_DATA.map((v, i) => ({ ...v, id: i + 1 }));
+const memoryVideos = [];
 const memoryPurchases = [];
 
 // ── Middleware ──
@@ -328,7 +329,7 @@ app.get('/api/videos', authenticateToken, async (req, res) => {
 
     if (isDBReady()) {
       const videoResult = await pool.query(
-        'SELECT id, title, category, sport, price, thumbnail_url, video_url, duration, channel_name, channel_avatar, views, likes, tag, is_live, is_premium FROM videos ORDER BY id'
+        'SELECT id, title, category, sport, price, thumbnail_url, video_url, duration, channel_name, channel_avatar, views, likes, tag, is_live, is_premium, source_type, category_id FROM videos ORDER BY id'
       );
       videos = videoResult.rows;
 
@@ -979,6 +980,61 @@ app.get('/api/wallet/transactions', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Wallet transactions error:', err);
     return res.status(500).json({ ok: false, error: 'Could not load transactions' });
+  }
+});
+
+// ══════════════════════════════════════════
+//  ADMIN ROUTES
+// ══════════════════════════════════════════
+app.use('/api/admin', adminRoutes);
+
+// Serve admin panel (separate from main site — not in public/)
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'admin.html'));
+});
+
+// ══════════════════════════════════════════
+//  PUBLIC CATEGORY/VIDEO API
+// ══════════════════════════════════════════
+
+// GET /api/categories — list active categories with their videos
+app.get('/api/categories', async (req, res) => {
+  try {
+    if (!isDBReady()) {
+      return res.json({ ok: true, categories: [] });
+    }
+
+    const catResult = await pool.query(`
+      SELECT id, name, slug, icon, description, sort_order
+      FROM categories
+      WHERE is_active = true
+      ORDER BY sort_order ASC, name ASC
+    `);
+
+    const categories = [];
+    for (const cat of catResult.rows) {
+      const videoResult = await pool.query(`
+        SELECT id, title, category, sport, price, thumbnail_url, video_url, duration,
+               channel_name, channel_avatar, views, likes, tag, is_live, is_premium,
+               source_type, file_key
+        FROM videos
+        WHERE category_id = $1 AND (upload_status = 'completed' OR upload_status IS NULL)
+        ORDER BY id DESC
+      `, [cat.id]);
+
+      categories.push({
+        ...cat,
+        videos: videoResult.rows.map(v => ({
+          ...v,
+          price_rupees: Math.round(v.price / 100),
+        })),
+      });
+    }
+
+    return res.json({ ok: true, categories });
+  } catch (err) {
+    console.error('Categories API error:', err);
+    return res.status(500).json({ ok: false, error: 'Could not load categories' });
   }
 });
 

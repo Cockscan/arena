@@ -754,49 +754,121 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function fetchVideos() {
     try {
-      const res = await fetch('/api/videos', { credentials: 'include' });
-      const data = await res.json();
-      if (data.ok && data.videos) {
+      // Fetch categories with videos (dynamic content)
+      const catRes = await fetch('/api/categories', { credentials: 'include' });
+      const catData = await catRes.json();
+
+      // Also fetch videos with purchase status
+      const vidRes = await fetch('/api/videos', { credentials: 'include' });
+      const vidData = await vidRes.json();
+
+      if (vidData.ok && vidData.videos) {
         videoDataMap = {};
         userPurchasedIds = new Set();
-        data.videos.forEach(v => {
+        vidData.videos.forEach(v => {
           videoDataMap[v.id] = v;
           if (v.purchased) userPurchasedIds.add(v.id);
         });
-        updateVideoCards();
       }
+
+      if (catData.ok && catData.categories) {
+        renderDynamicCategories(catData.categories);
+      }
+      // If API fails, skeleton placeholders remain visible
     } catch (err) {
       console.error('Failed to fetch videos:', err);
+      // Keep skeleton placeholders visible — they show the page layout
     }
   }
 
-  function updateVideoCards() {
-    document.querySelectorAll('.video-card[data-video-id]').forEach(card => {
-      const videoId = parseInt(card.getAttribute('data-video-id'));
-      const video = videoDataMap[videoId];
-      if (!video) return;
+  function renderDynamicCategories(categories) {
+    const container = document.getElementById('categories-container');
+    if (!container) return;
 
-      // Remove existing price/premium badges to avoid duplicates
-      const existingBadge = card.querySelector('.video-price-badge');
-      if (existingBadge) existingBadge.remove();
-      const oldPremium = card.querySelector('.video-premium-tag');
-      if (oldPremium) oldPremium.remove();
+    // If API returned no categories at all, keep the skeleton placeholders
+    if (categories.length === 0) return;
 
-      // Add price badge to thumbnail
-      const thumb = card.querySelector('.video-thumb');
-      if (thumb) {
-        const badge = document.createElement('span');
-        badge.className = 'video-price-badge' + (video.purchased ? ' purchased' : '');
-        badge.textContent = video.purchased ? 'Purchased' : `₹${video.price_rupees}`;
-        thumb.appendChild(badge);
-      }
+    let html = '';
+    categories.forEach(cat => {
+      const sportFilter = cat.slug || 'all';
+      const hasVideos = cat.videos && cat.videos.length > 0;
 
-      if (video.purchased) {
-        card.classList.add('purchased');
+      html += `
+        <section class="section" data-sport="${sportFilter}">
+          <div class="section-header">
+            <h2 class="section-title"><span class="accent-bar"></span> ${cat.icon || ''} ${escapeHtml(cat.name)}</h2>
+            <a href="#" class="section-more">View all →</a>
+          </div>
+          <div class="video-grid">
+      `;
+
+      if (hasVideos) {
+        cat.videos.forEach(v => {
+          const video = videoDataMap[v.id] || v;
+          const purchased = userPurchasedIds.has(v.id);
+          const thumbUrl = video.thumbnail_url || '';
+          const tag = video.tag ? `<span class="video-tag${video.tag === 'TRENDING' ? ' tag-trending' : ''}">${escapeHtml(video.tag)}</span>` : '';
+          const liveDot = video.is_live ? '<span class="live-indicator"><span class="live-dot"></span> LIVE</span>' : '';
+          const premiumBadge = video.is_premium ? '<span class="video-premium-tag">PREMIUM</span>' : '';
+
+          html += `
+              <a class="video-card${purchased ? ' purchased' : ''}" data-video-id="${v.id}" href="#">
+                <div class="video-thumb" style="background-image: url('${escapeHtml(thumbUrl)}')">
+                  ${tag}
+                  ${liveDot}
+                  ${premiumBadge}
+                  <span class="video-duration">${video.duration || ''}</span>
+                </div>
+                <div class="video-info">
+                  <div class="video-channel-avatar">${video.channel_avatar || 'A'}</div>
+                  <div class="video-details">
+                    <div class="video-title">${escapeHtml(video.title)}</div>
+                    <div class="video-meta">
+                      <span>${escapeHtml(video.channel_name || '')}</span>
+                      <span>${video.views || '0'} views</span>
+                    </div>
+                  </div>
+                </div>
+              </a>
+          `;
+        });
       } else {
-        card.classList.remove('purchased');
+        // Empty category — show skeleton placeholders
+        for (let i = 0; i < 4; i++) {
+          html += `<div class="skeleton-card"><div class="skeleton-thumb"></div><div class="skeleton-info"><div class="skeleton-line w-title"></div><div class="skeleton-line w-meta"></div></div></div>`;
+        }
       }
+
+      html += `
+          </div>
+        </section>
+      `;
     });
+
+    container.innerHTML = html;
+
+    // Re-attach click handlers to video cards
+    container.querySelectorAll('.video-card[data-video-id]').forEach(card => {
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        const videoId = parseInt(card.getAttribute('data-video-id'));
+        showPremiumOrPlay(videoId);
+      });
+    });
+
+    // Apply sidebar filter if active
+    applySidebarFilter();
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  function updateVideoCards() {
+    // For dynamically rendered cards, re-fetch and re-render
+    // This is called after purchase etc
+    fetchVideos();
   }
 
 
@@ -1013,9 +1085,10 @@ document.addEventListener('DOMContentLoaded', () => {
   //  SIDEBAR SPORT FILTERING
   // ══════════════════════════════════════════
   const sidebarItems = document.querySelectorAll('.sidebar-item[data-filter]');
-  const sportSections = document.querySelectorAll('.section[data-sport]');
 
   function filterBySport(sport) {
+    // Re-query sections since they're dynamically rendered
+    const sportSections = document.querySelectorAll('.section[data-sport]');
     sportSections.forEach(section => {
       const sectionSport = section.getAttribute('data-sport');
       if (sport === 'all' || sectionSport === sport || sectionSport === 'all') {
@@ -1027,6 +1100,12 @@ document.addEventListener('DOMContentLoaded', () => {
         section.style.display = 'none';
       }
     });
+  }
+
+  function applySidebarFilter() {
+    const activeItem = document.querySelector('.sidebar-item[data-filter].active');
+    const filter = activeItem ? activeItem.getAttribute('data-filter') : 'all';
+    filterBySport(filter);
   }
 
   sidebarItems.forEach(item => {
@@ -1559,21 +1638,40 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Extract YouTube video ID or use search query fallback
-    const ytId = getYouTubeId(video.video_url);
-    let embedUrl;
-    if (ytId) {
-      embedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`;
-    } else if (video.video_url.includes('youtube.com/results')) {
-      // Search URL — extract query and use embed search
-      const searchParams = new URL(video.video_url).searchParams;
-      const query = searchParams.get('search_query') || video.title;
-      embedUrl = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(query)}&autoplay=1`;
+    // Determine player type based on source_type
+    const isR2 = video.source_type === 'r2';
+    let playerHtml;
+
+    if (isR2) {
+      // Self-hosted video — use HTML5 video tag
+      playerHtml = `
+        <video id="main-video-player" controls autoplay
+          style="width: 100%; height: 100%; background: #000;"
+          src="${video.video_url}">
+          Your browser does not support the video tag.
+        </video>`;
     } else {
-      // Direct URL fallback — open in new tab
-      window.open(video.video_url, '_blank');
-      return;
+      // YouTube video — use iframe embed
+      const ytId = getYouTubeId(video.video_url);
+      let embedUrl;
+      if (ytId) {
+        embedUrl = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`;
+      } else if (video.video_url.includes('youtube.com/results')) {
+        const searchParams = new URL(video.video_url).searchParams;
+        const query = searchParams.get('search_query') || video.title;
+        embedUrl = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(query)}&autoplay=1`;
+      } else {
+        window.open(video.video_url, '_blank');
+        return;
+      }
+      playerHtml = `
+        <iframe id="main-video-player" src="${embedUrl}"
+          style="width: 100%; height: 100%; border: none;"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+          allowfullscreen></iframe>`;
     }
+
+    const categoryLabel = video.category || '';
 
     const overlay = document.createElement('div');
     overlay.className = 'auth-overlay video-player-overlay';
@@ -1586,24 +1684,16 @@ document.addEventListener('DOMContentLoaded', () => {
           &times;
         </button>
 
-        <!-- YouTube Embed Container -->
         <div class="video-player-container" style="position: relative; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); aspect-ratio: 16/9;">
-          <iframe
-            id="main-video-player"
-            src="${embedUrl}"
-            style="width: 100%; height: 100%; border: none;"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-            allowfullscreen>
-          </iframe>
+          ${playerHtml}
         </div>
 
-        <!-- Video Info Below Player -->
         <div class="video-info-section" style="margin-top: 20px; padding: 16px 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
           <div style="display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 0;">
               <h2 style="margin: 0 0 6px; font-size: 20px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${video.title}</h2>
               <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                <span style="padding: 3px 10px; background: rgba(133,199,66,0.15); border: 1px solid rgba(133,199,66,0.3); border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px;">${video.category}</span>
+                <span style="padding: 3px 10px; background: rgba(133,199,66,0.15); border: 1px solid rgba(133,199,66,0.3); border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px;">${categoryLabel}</span>
                 ${video.duration ? `<span style="color: rgba(255,255,255,0.5); font-size: 13px;">${video.duration}</span>` : ''}
                 ${video.channel_name ? `<span style="color: rgba(255,255,255,0.5); font-size: 13px;">${video.channel_name}</span>` : ''}
                 <span style="color: rgba(255,255,255,0.5); font-size: 13px;">${video.views || ''}</span>
@@ -1628,9 +1718,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const closePlayer = () => {
-      // Remove iframe to stop playback
+      // Stop playback
       const iframe = overlay.querySelector('iframe');
       if (iframe) iframe.src = '';
+      const videoEl = overlay.querySelector('video');
+      if (videoEl) { videoEl.pause(); videoEl.src = ''; }
       overlay.classList.remove('show');
       setTimeout(() => overlay.remove(), 300);
     };

@@ -814,7 +814,6 @@ document.addEventListener('DOMContentLoaded', () => {
           html += `
               <a class="video-card${purchased ? ' purchased' : ''}" data-video-id="${v.id}" href="#">
                 <div class="video-thumb" style="background-image: url('${escapeHtml(thumbUrl)}')">
-                  ${tag}
                   ${liveDot}
                   ${premiumBadge}
                   <span class="video-duration">${video.duration && video.duration !== '0:00' ? video.duration : ''}</span>

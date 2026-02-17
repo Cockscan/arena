@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  let adminToken = localStorage.getItem('arena_admin_token');
+  let adminToken = localStorage.getItem('pixelplex_admin_token');
   let currentPage = 'dashboard';
   let categoriesCache = [];
 
@@ -17,7 +17,7 @@
     const data = await res.json();
     if (!res.ok && res.status === 401) {
       // Token expired
-      localStorage.removeItem('arena_admin_token');
+      localStorage.removeItem('pixelplex_admin_token');
       adminToken = null;
       showLogin();
     }
@@ -61,7 +61,7 @@
 
       if (data.ok) {
         adminToken = data.token;
-        localStorage.setItem('arena_admin_token', data.token);
+        localStorage.setItem('pixelplex_admin_token', data.token);
         errorEl.style.display = 'none';
         showApp();
       } else {
@@ -81,7 +81,7 @@
 
   // Logout
   document.getElementById('admin-logout').addEventListener('click', () => {
-    localStorage.removeItem('arena_admin_token');
+    localStorage.removeItem('pixelplex_admin_token');
     adminToken = null;
     showLogin();
   });

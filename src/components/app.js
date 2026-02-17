@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   APP.JS — Arena Sports Interactivity
+   APP.JS — PixelPlex Interactivity
    ═══════════════════════════════════════════ */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -490,7 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (result.ok) {
           closeAuthModal(overlay);
           await fetchVideos();
-          showToast(`Account created! Welcome to Arena Sports!`, 'success');
+          showToast(`Account created! Welcome to PixelPlex!`, 'success');
         } else {
           errEl.textContent = result.error || 'Something went wrong';
           errEl.style.display = 'block';
@@ -561,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <line x1="1" y1="10" x2="23" y2="10"/>
             </svg>
           </div>
-          <h2 class="payment-title">Activate Your Arena Sports Account</h2>
+          <h2 class="payment-title">Activate Your PixelPlex Account</h2>
           <p class="payment-subtitle">One-time activation fee to start purchasing and streaming content</p>
         </div>
 
@@ -673,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
           key: config.key_id,
           amount: orderData.order.amount,
           currency: orderData.order.currency,
-          name: 'Arena Sports',
+          name: 'PixelPlex',
           description: 'Premium Access',
           order_id: orderData.order.id,
           prefill: {
@@ -1000,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', () => {
           key: config.key_id,
           amount: orderData.order.amount,
           currency: orderData.order.currency,
-          name: 'Arena Sports',
+          name: 'PixelPlex',
           description: video.title,
           order_id: orderData.order.id,
           prefill: { name: currentUser.username, email: currentUser.email },
@@ -1411,7 +1411,7 @@ document.addEventListener('DOMContentLoaded', () => {
         key: orderData.order.key_id || window.RAZORPAY_KEY_ID,
         amount: orderData.order.amount,
         currency: orderData.order.currency,
-        name: 'Arena Sports',
+        name: 'PixelPlex',
         description: `Add ₹${Math.round(amount / 100)} to Wallet`,
         order_id: orderData.order.id,
         prefill: {

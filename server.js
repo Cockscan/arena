@@ -13,7 +13,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'arena-sports-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'pixelplex-secret-key-change-in-production';
 
 // ── Razorpay instance ──
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
@@ -41,7 +41,7 @@ app.use(express.static(path.join(__dirname)));
 
 // ── Auth Middleware ──
 function authenticateToken(req, res, next) {
-  const token = req.cookies.arena_token || req.headers.authorization?.split(' ')[1];
+  const token = req.cookies.pixelplex_token || req.headers.authorization?.split(' ')[1];
   if (!token) {
     req.user = null;
     return next();
@@ -122,7 +122,7 @@ app.post('/api/signup', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    res.cookie('arena_token', token, {
+    res.cookie('pixelplex_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -186,7 +186,7 @@ app.post('/api/signin', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    res.cookie('arena_token', token, {
+    res.cookie('pixelplex_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -242,7 +242,7 @@ app.get('/api/me', authenticateToken, async (req, res) => {
 
 // POST /api/signout
 app.post('/api/signout', (req, res) => {
-  res.clearCookie('arena_token');
+  res.clearCookie('pixelplex_token');
   return res.json({ ok: true });
 });
 
@@ -306,7 +306,7 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
         JWT_SECRET,
         { expiresIn: '7d' }
       );
-      res.cookie('arena_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+      res.cookie('pixelplex_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
 
       return res.json({ ok: true, message: 'Profile updated successfully', user: updated });
     } else {
@@ -454,8 +454,8 @@ app.get('/api/payment/config', async (req, res) => {
     key_id: RAZORPAY_KEY_ID,
     amount: videoInfo ? videoInfo.price : PLAN_AMOUNT,
     currency: 'INR',
-    name: 'Arena Sports',
-    description: videoInfo ? videoInfo.title : 'Arena Sports Account Activation',
+    name: 'PixelPlex',
+    description: videoInfo ? videoInfo.title : 'PixelPlex Account Activation',
     enabled: !!razorpay,
     video: videoInfo ? { id: videoInfo.id, title: videoInfo.title, price: videoInfo.price, price_rupees: Math.round(videoInfo.price / 100), thumbnail_url: videoInfo.thumbnail_url } : null
   });
@@ -498,7 +498,7 @@ app.post('/api/payment/create-order', authenticateToken, async (req, res) => {
     } else {
       // Account activation mode (existing flow)
       amount = PLAN_AMOUNT;
-      receiptPrefix = `arena_${req.user.id}`;
+      receiptPrefix = `pixelplex_${req.user.id}`;
       notes = { user_id: String(req.user.id), username: req.user.username, email: req.user.email, type: 'account_activation' };
     }
 
@@ -591,7 +591,7 @@ app.post('/api/payment/verify', authenticateToken, async (req, res) => {
         JWT_SECRET,
         { expiresIn: '7d' }
       );
-      res.cookie('arena_token', token, {
+      res.cookie('pixelplex_token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -1058,7 +1058,7 @@ async function start() {
   await initDB();
 
   const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n  Arena Sports server running at http://localhost:${PORT}`);
+    console.log(`\n  PixelPlex server running at http://localhost:${PORT}`);
     console.log(`  Open http://localhost:${PORT}/public/index.html`);
     if (!isDBReady()) {
       console.log(`  Warning: Running without database — using in-memory auth (data resets on restart)`);

@@ -11,8 +11,8 @@ const crypto = require('crypto');
  */
 async function generateThumbnail(videoBuffer) {
   const tmpDir = os.tmpdir();
-  const videoTmpPath = path.join(tmpDir, `arena_vid_${crypto.randomUUID()}.mp4`);
-  const thumbFilename = `arena_thumb_${crypto.randomUUID()}.jpg`;
+  const videoTmpPath = path.join(tmpDir, `pp_vid_${crypto.randomUUID()}.mp4`);
+  const thumbFilename = `pp_thumb_${crypto.randomUUID()}.jpg`;
   const thumbTmpPath = path.join(tmpDir, thumbFilename);
 
   try {
@@ -58,7 +58,7 @@ async function generateThumbnail(videoBuffer) {
  */
 async function getVideoDuration(videoBuffer) {
   const tmpDir = os.tmpdir();
-  const videoTmpPath = path.join(tmpDir, `arena_dur_${crypto.randomUUID()}.mp4`);
+  const videoTmpPath = path.join(tmpDir, `pp_dur_${crypto.randomUUID()}.mp4`);
 
   try {
     fs.writeFileSync(videoTmpPath, videoBuffer);

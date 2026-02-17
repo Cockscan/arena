@@ -6,7 +6,7 @@ const path = require('path');
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || '';
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || '';
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || '';
-const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'arena-sports';
+const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'pixelplex';
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || '';
 
 let s3Client = null;

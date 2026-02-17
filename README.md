@@ -1,4 +1,4 @@
-# Arena — Sports Streaming Platform
+# PixelPlex — Streaming Platform
 
 A modern sports streaming UI inspired by Rumble's design language.
 
@@ -15,7 +15,7 @@ npx serve public -l 3000
 ## Project Structure
 
 ```
-arena-sports/
+pixelplex/
 ├── public/
 │   └── index.html          # Entry point
 ├── src/

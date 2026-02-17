@@ -1,7 +1,7 @@
 {
-  "name": "arena-sports",
+  "name": "pixelplex",
   "version": "1.0.0",
-  "description": "Arena Sports Streaming Platform",
+  "description": "PixelPlex Streaming Platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

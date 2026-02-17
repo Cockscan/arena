@@ -9,7 +9,7 @@ const router = express.Router();
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
-const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'arena-admin-secret-change-in-production';
+const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'pixelplex-admin-secret-change-in-production';
 
 // Multer config — memory storage (Railway has ephemeral filesystem)
 const upload = multer({

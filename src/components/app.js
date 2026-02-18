@@ -584,24 +584,26 @@ document.addEventListener('DOMContentLoaded', () => {
           const tag = video.tag ? `<span class="video-tag${video.tag === 'TRENDING' ? ' tag-trending' : ''}">${escapeHtml(video.tag)}</span>` : '';
           const liveDot = video.is_live ? '<span class="live-indicator"><span class="live-dot"></span> LIVE</span>' : '';
 
-          const priceLabel = video.price > 0 && !purchased
-            ? `<span class="video-price-tag" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.75);color:var(--accent);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;">₹${video.price_rupees || Math.round(video.price / 100)}</span>`
+          const priceText = video.price > 0 && !purchased
+            ? `<span style="color:var(--accent);font-weight:700;font-size:13px;white-space:nowrap;">₹${video.price_rupees || Math.round(video.price / 100)}</span>`
             : purchased
-              ? `<span class="video-price-tag" style="position:absolute;top:8px;right:8px;background:rgba(133,199,66,0.9);color:#111;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">OWNED</span>`
-              : '';
+              ? `<span style="color:var(--accent);font-weight:700;font-size:11px;text-transform:uppercase;white-space:nowrap;">Owned</span>`
+              : video.price === 0
+                ? `<span style="color:rgba(255,255,255,0.4);font-size:12px;white-space:nowrap;">Free</span>`
+                : '';
 
           html += `
               <a class="video-card${purchased ? ' purchased' : ''}" data-video-id="${v.id}" href="#">
                 <div class="video-thumb" style="background-image: url('${escapeHtml(thumbUrl)}')">
                   ${liveDot}
-                  ${priceLabel}
                   <span class="video-duration">${video.duration && video.duration !== '0:00' ? video.duration : ''}</span>
                   <div class="video-thumb-overlay">
                     <div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></div>
                   </div>
                 </div>
-                <div class="video-info">
-                  <div class="video-title">${escapeHtml(video.title)}</div>
+                <div class="video-info" style="display:flex;justify-content:space-between;align-items:start;gap:8px;">
+                  <div class="video-title" style="flex:1;min-width:0;">${escapeHtml(video.title)}</div>
+                  ${priceText}
                 </div>
               </a>
           `;

@@ -100,6 +100,9 @@ body {
 .btn-primary {
   background: var(--accent);
   color: #111;
+}
+
+.login-box .btn-primary {
   width: 100%;
   justify-content: center;
 }
@@ -216,12 +219,18 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .page-header h1 {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.page-header .btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: 8px;
 }
 
 /* ── Stats Grid ── */
@@ -335,7 +344,7 @@ body {
 }
 
 /* ── Tab Buttons ── */
-.tab-btn { width: auto; }
+.tab-btn { width: auto; padding: 7px 16px; font-size: 13px; }
 
 /* ── Video Grid ── */
 .video-grid {

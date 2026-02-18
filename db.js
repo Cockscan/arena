@@ -88,7 +88,7 @@ async function initDB() {
           order_id VARCHAR(255),
           payment_amount INTEGER NOT NULL,
           purchased_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          UNIQUE(user_id, video_id)
+          expires_at TIMESTAMP WITH TIME ZONE
         );
       `);
 
@@ -141,6 +141,15 @@ async function initDB() {
           ALTER TABLE purchases ADD COLUMN IF NOT EXISTS payment_method VARCHAR(20) DEFAULT 'razorpay'
             CHECK (payment_method IN ('razorpay', 'wallet'));
           ALTER TABLE purchases ADD COLUMN IF NOT EXISTS wallet_transaction_id INTEGER REFERENCES wallet_transactions(id);
+          ALTER TABLE purchases ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP WITH TIME ZONE;
+        END $$;
+      `);
+
+      // Drop the old unique constraint if it exists (allow re-purchases after expiry)
+      await client.query(`
+        DO $$ BEGIN
+          ALTER TABLE purchases DROP CONSTRAINT IF EXISTS purchases_user_id_video_id_key;
+        EXCEPTION WHEN undefined_object THEN NULL;
         END $$;
       `);
 

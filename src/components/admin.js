@@ -353,6 +353,7 @@
             <div class="card-title">${escHtml(v.title)}</div>
             <div class="card-meta">
               <span class="row-badge ${isR2 ? 'badge-r2' : 'badge-youtube'}">${isR2 ? 'R2' : 'YouTube'}</span>
+              <span>₹${Math.round((v.price || 0) / 100)}</span>
               <span>${v.duration || ''}</span>
             </div>
             <div class="card-actions">
@@ -393,6 +394,11 @@
             <select id="upload-category">
               <option value="">Select a category</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label>Price (₹) *</label>
+            <input type="number" id="upload-price" placeholder="e.g. 49" min="0" max="100000" value="49">
+            <div style="font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px;">Set to 0 for free videos</div>
           </div>
           <div class="form-group">
             <label>Tag (optional)</label>
@@ -471,11 +477,13 @@
     overlay.querySelector('#upload-submit').addEventListener('click', async () => {
       const title = overlay.querySelector('#upload-title').value.trim();
       const categoryId = overlay.querySelector('#upload-category').value;
+      const priceRupees = overlay.querySelector('#upload-price').value;
       const tag = overlay.querySelector('#upload-tag').value.trim();
 
       if (!selectedFile) { alert('Please select a video file'); return; }
       if (!title) { alert('Please enter a video title'); return; }
       if (!categoryId) { alert('Please select a category'); return; }
+      if (priceRupees === '' || isNaN(priceRupees) || parseInt(priceRupees) < 0) { alert('Please enter a valid price'); return; }
 
       const submitBtn = overlay.querySelector('#upload-submit');
       submitBtn.disabled = true;
@@ -488,6 +496,7 @@
       formData.append('video', selectedFile);
       formData.append('title', title);
       formData.append('category_id', categoryId);
+      formData.append('price', parseInt(priceRupees) * 100); // Convert rupees to paise
       if (tag) formData.append('tag', tag);
 
       try {
@@ -565,6 +574,11 @@
             </select>
           </div>
           <div class="form-group">
+            <label>Price (₹)</label>
+            <input type="number" id="edit-price" value="${Math.round((video.price || 0) / 100)}" min="0" max="100000" placeholder="e.g. 49">
+            <div style="font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px;">Set to 0 for free videos</div>
+          </div>
+          <div class="form-group">
             <label>Tag</label>
             <input type="text" id="edit-tag" value="${escHtml(video.tag || '')}" placeholder="e.g. TRENDING">
           </div>
@@ -595,13 +609,14 @@
     overlay.querySelector('#edit-save').addEventListener('click', async () => {
       const title = overlay.querySelector('#edit-title').value.trim();
       const category_id = overlay.querySelector('#edit-category').value;
+      const priceRupees = overlay.querySelector('#edit-price').value;
       const tag = overlay.querySelector('#edit-tag').value.trim();
 
       if (!title) { alert('Title is required'); return; }
 
       const result = await api(`/videos/${id}`, {
         method: 'PUT',
-        body: JSON.stringify({ title, category_id: category_id || null, tag: tag || null }),
+        body: JSON.stringify({ title, category_id: category_id || null, price: parseInt(priceRupees) * 100, tag: tag || null }),
       });
 
       if (result.ok) {
@@ -634,8 +649,8 @@
           <span class="th" style="flex:2">Email</span>
           <span class="th" style="flex:1">Wallet</span>
           <span class="th" style="flex:1">Purchases</span>
-          <span class="th" style="flex:1">Status</span>
           <span class="th" style="flex:1.5">Joined</span>
+          <span class="th" style="flex:1">Actions</span>
         </div>
         <div class="table-body" id="users-list">
           <div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-text">Loading...</div></div>
@@ -662,12 +677,70 @@
           <span class="td" style="flex:2">${escHtml(u.email)}</span>
           <span class="td" style="flex:1">₹${walletBal}</span>
           <span class="td" style="flex:1">${u.total_purchases}</span>
-          <span class="td" style="flex:1"><span class="row-badge ${u.payment_status === 'paid' ? 'badge-active' : 'badge-inactive'}">${u.payment_status || 'pending'}</span></span>
           <span class="td" style="flex:1.5">${joined}</span>
+          <span class="td" style="flex:1">
+            <button class="btn btn-primary btn-sm" onclick="window._addBalance(${u.id}, '${escHtml(u.username)}')">+ Add Balance</button>
+          </span>
         </div>
       `;
     }).join('');
   }
+
+  // Add Balance modal
+  window._addBalance = function(userId, username) {
+    const overlay = document.createElement('div');
+    overlay.className = 'admin-modal-overlay';
+    overlay.innerHTML = `
+      <div class="admin-modal" style="max-width: 400px;">
+        <div class="modal-header">
+          <h3>Add Balance — ${escHtml(username)}</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Amount (₹)</label>
+            <input type="number" id="credit-amount" placeholder="e.g. 500" min="1" max="100000">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary modal-cancel">Cancel</button>
+          <button class="btn btn-primary" id="credit-save">Add Balance</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('.modal-close').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('.modal-cancel').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+    overlay.querySelector('#credit-save').addEventListener('click', async () => {
+      const amountRupees = parseInt(document.getElementById('credit-amount').value);
+      if (!amountRupees || amountRupees < 1) { alert('Enter a valid amount'); return; }
+
+      const btn = overlay.querySelector('#credit-save');
+      btn.disabled = true;
+      btn.textContent = 'Adding...';
+
+      const data = await api(`/users/${userId}/add-balance`, {
+        method: 'POST',
+        body: JSON.stringify({ amount: amountRupees * 100 }) // convert to paise
+      });
+
+      if (data.ok) {
+        overlay.remove();
+        alert(data.message);
+        // Refresh users list
+        const content = document.getElementById('page-content');
+        renderUsers(content);
+      } else {
+        alert(data.error || 'Error adding balance');
+        btn.disabled = false;
+        btn.textContent = 'Add Balance';
+      }
+    });
+  };
 
   // ══════════════════════════════════════════
   //  TRANSACTIONS

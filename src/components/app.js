@@ -181,7 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
       signinBtn.innerHTML = `
         <span class="header-user-avatar">${session.username.charAt(0).toUpperCase()}</span>
         <span class="header-username">${session.username}</span>
-        ${session.payment_status === 'paid' ? '<span class="premium-badge">PRO</span>' : ''}
         <svg class="header-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       `;
 
@@ -196,9 +195,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="dropdown-header">
           <div class="dropdown-avatar">${session.username.charAt(0).toUpperCase()}</div>
           <div>
-            <div class="dropdown-name">${session.username} ${session.payment_status === 'paid' ? '<span class="premium-badge small">PRO</span>' : ''}</div>
+            <div class="dropdown-name">${session.username}</div>
             <div class="dropdown-email">${session.email}</div>
-            ${session.payment_status !== 'paid' ? '<div class="dropdown-plan-status">Free Plan</div>' : '<div class="dropdown-plan-status paid">Premium Active</div>'}
           </div>
         </div>
         <div class="dropdown-wallet-section" style="padding: 12px; margin: 8px 0; background: rgba(133,199,66,0.05); border-radius: 8px; border: 1px solid rgba(133,199,66,0.2);">
@@ -212,13 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
           <button class="dropdown-add-money" style="width: 100%; padding: 8px; background: linear-gradient(135deg, var(--accent), #6aad2d); color: #111; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">+ Add Money</button>
         </div>
         <div class="dropdown-divider"></div>
-        ${session.payment_status !== 'paid' ? `
-        <a class="dropdown-item dropdown-upgrade" data-action="upgrade">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Activate Account — ₹99
-        </a>
-        <div class="dropdown-divider"></div>
-        ` : ''}
         <a class="dropdown-item" data-action="profile">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           My Profile
@@ -272,9 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
             await clearSession();
             showToast('Signed out successfully');
             dropdown.classList.remove('show');
-          } else if (action === 'upgrade') {
-            dropdown.classList.remove('show');
-            openPaymentModal();
           } else if (action === 'history') {
             dropdown.classList.remove('show');
             openTransactionHistory();
@@ -529,223 +517,9 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.addEventListener('transitionend', () => overlay.remove());
   }
 
-  // ══════════════════════════════════════════
-  //  PAYMENT HELPERS
-  // ══════════════════════════════════════════
+  // (payment_status / isPaid removed — no subscription model)
 
-  function isPaid() {
-    return currentUser && currentUser.payment_status === 'paid';
-  }
-
-  // ══════════════════════════════════════════
-  //  PAYMENT MODAL (Razorpay UPI)
-  // ══════════════════════════════════════════
-  async function openPaymentModal() {
-    if (!isLoggedIn()) { openAuthModal('signup'); return; }
-    if (isPaid()) { showToast('You already have premium access!', 'success'); return; }
-
-    // Remove existing payment overlay
-    const existing = document.querySelector('.payment-overlay');
-    if (existing) existing.remove();
-
-    const overlay = document.createElement('div');
-    overlay.className = 'auth-overlay payment-overlay';
-    overlay.innerHTML = `
-      <div class="auth-modal payment-modal">
-        <button class="auth-close" aria-label="Close">&times;</button>
-
-        <div class="payment-header">
-          <div class="payment-icon">
-            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#85c742" stroke-width="2">
-              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-              <line x1="1" y1="10" x2="23" y2="10"/>
-            </svg>
-          </div>
-          <h2 class="payment-title">Activate Your PixelPlex Account</h2>
-          <p class="payment-subtitle">One-time activation fee to start purchasing and streaming content</p>
-        </div>
-
-        <div class="payment-plan">
-          <div class="plan-badge">BEST VALUE</div>
-          <div class="plan-price">
-            <span class="plan-currency">₹</span>
-            <span class="plan-amount">99</span>
-            <span class="plan-period">/ one-time</span>
-          </div>
-          <ul class="plan-features">
-            <li>✓ Account activation — one-time fee</li>
-            <li>✓ Browse and purchase individual videos</li>
-            <li>✓ HD quality streaming on all devices</li>
-            <li>✓ Access your purchased content anytime</li>
-          </ul>
-        </div>
-
-        <div class="payment-methods">
-          <span class="payment-methods-label">Pay securely via</span>
-          <div class="payment-badges">
-            <span class="pay-badge">UPI</span>
-            <span class="pay-badge">Cards</span>
-            <span class="pay-badge">Net Banking</span>
-            <span class="pay-badge">Wallets</span>
-          </div>
-        </div>
-
-        <button class="payment-btn" id="pay-now-btn">
-          <span class="payment-btn-text">Pay ₹99 Now</span>
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </button>
-
-        <p class="payment-disclaimer">
-          Secured by Razorpay. UPI, Cards, Net Banking accepted.<br>
-          <a href="info.html#refund" target="_blank">Refund Policy</a>
-        </p>
-      </div>`;
-
-    document.body.appendChild(overlay);
-
-    // Close handlers
-    overlay.querySelector('.auth-close').addEventListener('click', () => {
-      overlay.classList.remove('show');
-      overlay.addEventListener('transitionend', () => overlay.remove());
-    });
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        overlay.classList.remove('show');
-        overlay.addEventListener('transitionend', () => overlay.remove());
-      }
-    });
-    document.addEventListener('keydown', function esc(e) {
-      if (e.key === 'Escape') {
-        overlay.classList.remove('show');
-        overlay.addEventListener('transitionend', () => overlay.remove());
-        document.removeEventListener('keydown', esc);
-      }
-    });
-
-    // Animate in
-    requestAnimationFrame(() => overlay.classList.add('show'));
-
-    // Fetch payment config
-    let config;
-    try {
-      const res = await fetch('/api/payment/config');
-      config = await res.json();
-    } catch (err) {
-      console.error('Payment config error:', err);
-      showToast('Payment system unavailable. Please try later.', 'info');
-      return;
-    }
-
-    // Update displayed amount dynamically
-    const amountRupees = Math.round(config.amount / 100);
-    overlay.querySelector('.plan-amount').textContent = amountRupees;
-    overlay.querySelector('.payment-btn-text').textContent = `Pay ₹${amountRupees} Now`;
-
-    // Pay button
-    overlay.querySelector('#pay-now-btn').addEventListener('click', async () => {
-      if (!config.enabled) {
-        showToast('Payment gateway not configured yet. Contact support.', 'info');
-        return;
-      }
-
-      const payBtn = overlay.querySelector('#pay-now-btn');
-      payBtn.disabled = true;
-      payBtn.querySelector('.payment-btn-text').textContent = 'Creating order...';
-
-      try {
-        // Create order on server
-        const orderRes = await fetch('/api/payment/create-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
-        });
-        const orderData = await orderRes.json();
-
-        if (!orderData.ok) {
-          showToast(orderData.error || 'Could not create order', 'info');
-          payBtn.disabled = false;
-          payBtn.querySelector('.payment-btn-text').textContent = `Pay ₹${amountRupees} Now`;
-          return;
-        }
-
-        // Open Razorpay Checkout
-        const options = {
-          key: config.key_id,
-          amount: orderData.order.amount,
-          currency: orderData.order.currency,
-          name: 'PixelPlex',
-          description: 'Premium Access',
-          order_id: orderData.order.id,
-          prefill: {
-            name: currentUser.username,
-            email: currentUser.email
-          },
-          theme: { color: '#85c742' },
-          method: { upi: true, card: true, netbanking: true, wallet: true },
-          handler: async function(response) {
-            // Verify payment on server
-            try {
-              const verifyRes = await fetch('/api/payment/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature
-                })
-              });
-              const verifyData = await verifyRes.json();
-
-              if (verifyData.ok) {
-                currentUser.payment_status = 'paid';
-                updateHeaderForAuth();
-
-                overlay.classList.remove('show');
-                overlay.addEventListener('transitionend', () => overlay.remove());
-
-                showToast('Account activated! You can now purchase videos.', 'success');
-
-                // Check if there's a pending video purchase
-                if (window._pendingVideoId) {
-                  const pendingId = window._pendingVideoId;
-                  window._pendingVideoId = null;
-                  setTimeout(() => openVideoPaymentModal(pendingId), 500);
-                }
-              } else {
-                showToast(verifyData.error || 'Payment verification failed', 'info');
-              }
-            } catch (err) {
-              console.error('Payment verify error:', err);
-              showToast('Could not verify payment. Contact support.', 'info');
-            }
-          },
-          modal: {
-            ondismiss: function() {
-              payBtn.disabled = false;
-              payBtn.querySelector('.payment-btn-text').textContent = `Pay ₹${amountRupees} Now`;
-              showToast('Payment cancelled. You can pay anytime from your profile.', 'info');
-            }
-          }
-        };
-
-        const rzp = new Razorpay(options);
-        rzp.on('payment.failed', function(response) {
-          console.error('Payment failed:', response.error);
-          showToast(`Payment failed: ${response.error.description}`, 'info');
-          payBtn.disabled = false;
-          payBtn.querySelector('.payment-btn-text').textContent = `Pay ₹${amountRupees} Now`;
-        });
-        rzp.open();
-
-      } catch (err) {
-        console.error('Payment error:', err);
-        showToast('Something went wrong. Please try again.', 'info');
-        payBtn.disabled = false;
-        payBtn.querySelector('.payment-btn-text').textContent = `Pay ₹${amountRupees} Now`;
-      }
-    });
-  }
+  // (openPaymentModal removed — no ₹99 activation flow)
 
 
   // ══════════════════════════════════════════
@@ -809,13 +583,18 @@ document.addEventListener('DOMContentLoaded', () => {
           const thumbUrl = video.thumbnail_url || '';
           const tag = video.tag ? `<span class="video-tag${video.tag === 'TRENDING' ? ' tag-trending' : ''}">${escapeHtml(video.tag)}</span>` : '';
           const liveDot = video.is_live ? '<span class="live-indicator"><span class="live-dot"></span> LIVE</span>' : '';
-          const premiumBadge = video.is_premium ? '<span class="video-premium-tag">PREMIUM</span>' : '';
+
+          const priceLabel = video.price > 0 && !purchased
+            ? `<span class="video-price-tag" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.75);color:var(--accent);padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;">₹${video.price_rupees || Math.round(video.price / 100)}</span>`
+            : purchased
+              ? `<span class="video-price-tag" style="position:absolute;top:8px;right:8px;background:rgba(133,199,66,0.9);color:#111;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">OWNED</span>`
+              : '';
 
           html += `
               <a class="video-card${purchased ? ' purchased' : ''}" data-video-id="${v.id}" href="#">
                 <div class="video-thumb" style="background-image: url('${escapeHtml(thumbUrl)}')">
                   ${liveDot}
-                  ${premiumBadge}
+                  ${priceLabel}
                   <span class="video-duration">${video.duration && video.duration !== '0:00' ? video.duration : ''}</span>
                   <div class="video-thumb-overlay">
                     <div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg></div>
@@ -877,191 +656,23 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (videoId) {
-      openVideoPlayer(videoId);
+      const video = videoDataMap[videoId];
+      if (!video) { showToast('Video not found', 'info'); return; }
+
+      // If free or already purchased, play directly
+      if (video.price === 0 || video.purchased) {
+        openVideoPlayer(videoId);
+      } else {
+        // Need to purchase — open wallet purchase modal
+        openPurchaseOptionsModal(videoId);
+      }
     } else {
       showToast('Loading stream...', 'success');
     }
   }
 
 
-  // ══════════════════════════════════════════
-  //  VIDEO PAYMENT MODAL
-  // ══════════════════════════════════════════
-  async function openVideoPaymentModal(videoId) {
-    if (!isLoggedIn()) { openAuthModal('signup'); return; }
-
-    const video = videoDataMap[videoId];
-    if (!video) { showToast('Video not found', 'info'); return; }
-    if (video.purchased) {
-      showToast('You already own this video!', 'success');
-      openVideoPlayer(videoId);
-      return;
-    }
-
-    // Remove existing video payment overlay
-    const existing = document.querySelector('.video-payment-overlay');
-    if (existing) existing.remove();
-
-    const priceRupees = video.price_rupees;
-
-    const overlay = document.createElement('div');
-    overlay.className = 'auth-overlay video-payment-overlay';
-    overlay.innerHTML = `
-      <div class="auth-modal payment-modal">
-        <button class="auth-close" aria-label="Close">&times;</button>
-
-        <img class="video-purchase-thumb" src="${video.thumbnail_url}" alt="${video.title}">
-        <div class="video-purchase-category">${video.category}</div>
-        <div class="video-purchase-title">${video.title}</div>
-
-        <div class="payment-plan" style="margin-top:16px;">
-          <div class="plan-price">
-            <span class="plan-currency">₹</span>
-            <span class="plan-amount">${priceRupees}</span>
-            <span class="plan-period">/ one-time</span>
-          </div>
-        </div>
-
-        <div class="payment-methods">
-          <span class="payment-methods-label">Pay securely via</span>
-          <div class="payment-badges">
-            <span class="pay-badge">UPI</span>
-            <span class="pay-badge">Cards</span>
-            <span class="pay-badge">Net Banking</span>
-            <span class="pay-badge">Wallets</span>
-          </div>
-        </div>
-
-        <button class="payment-btn" id="video-pay-btn">
-          <span class="payment-btn-text">Buy for ₹${priceRupees}</span>
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </button>
-
-        <p class="payment-disclaimer">
-          Secured by Razorpay. One-time purchase — watch anytime.<br>
-          <a href="info.html#refund" target="_blank">Refund Policy</a>
-        </p>
-      </div>`;
-
-    document.body.appendChild(overlay);
-
-    // Close handlers
-    const closeOverlay = () => {
-      overlay.classList.remove('show');
-      overlay.addEventListener('transitionend', () => overlay.remove());
-    };
-    overlay.querySelector('.auth-close').addEventListener('click', closeOverlay);
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeOverlay(); });
-    document.addEventListener('keydown', function esc(e) {
-      if (e.key === 'Escape') { closeOverlay(); document.removeEventListener('keydown', esc); }
-    });
-
-    // Animate in
-    requestAnimationFrame(() => overlay.classList.add('show'));
-
-    // Fetch payment config for this video
-    let config;
-    try {
-      const res = await fetch(`/api/payment/config?video_id=${videoId}`);
-      config = await res.json();
-    } catch (err) {
-      showToast('Payment system unavailable', 'info');
-      return;
-    }
-
-    // Pay button handler
-    overlay.querySelector('#video-pay-btn').addEventListener('click', async () => {
-      if (!config.enabled) {
-        showToast('Payment gateway not configured yet. Contact support.', 'info');
-        return;
-      }
-
-      const payBtn = overlay.querySelector('#video-pay-btn');
-      payBtn.disabled = true;
-      payBtn.querySelector('.payment-btn-text').textContent = 'Creating order...';
-
-      try {
-        const orderRes = await fetch('/api/payment/create-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ video_id: videoId })
-        });
-        const orderData = await orderRes.json();
-
-        if (!orderData.ok) {
-          showToast(orderData.error || 'Could not create order', 'info');
-          payBtn.disabled = false;
-          payBtn.querySelector('.payment-btn-text').textContent = `Buy for ₹${priceRupees}`;
-          return;
-        }
-
-        const options = {
-          key: config.key_id,
-          amount: orderData.order.amount,
-          currency: orderData.order.currency,
-          name: 'PixelPlex',
-          description: video.title,
-          order_id: orderData.order.id,
-          prefill: { name: currentUser.username, email: currentUser.email },
-          theme: { color: '#85c742' },
-          method: { upi: true, card: true, netbanking: true, wallet: true },
-          handler: async function(response) {
-            try {
-              const verifyRes = await fetch('/api/payment/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  video_id: videoId
-                })
-              });
-              const verifyData = await verifyRes.json();
-
-              if (verifyData.ok) {
-                userPurchasedIds.add(videoId);
-                if (videoDataMap[videoId]) videoDataMap[videoId].purchased = true;
-                updateVideoCards();
-
-                closeOverlay();
-                showToast('Purchase successful! Opening video...', 'success');
-
-                setTimeout(() => openVideoPlayer(videoId), 500);
-              } else {
-                showToast(verifyData.error || 'Verification failed', 'info');
-              }
-            } catch (err) {
-              console.error('Video payment verify error:', err);
-              showToast('Could not verify payment. Contact support.', 'info');
-            }
-          },
-          modal: {
-            ondismiss: function() {
-              payBtn.disabled = false;
-              payBtn.querySelector('.payment-btn-text').textContent = `Buy for ₹${priceRupees}`;
-            }
-          }
-        };
-
-        const rzp = new Razorpay(options);
-        rzp.on('payment.failed', function(response) {
-          showToast(`Payment failed: ${response.error.description}`, 'info');
-          payBtn.disabled = false;
-          payBtn.querySelector('.payment-btn-text').textContent = `Buy for ₹${priceRupees}`;
-        });
-        rzp.open();
-
-      } catch (err) {
-        console.error('Video payment error:', err);
-        showToast('Something went wrong. Please try again.', 'info');
-        payBtn.disabled = false;
-        payBtn.querySelector('.payment-btn-text').textContent = `Buy for ₹${priceRupees}`;
-      }
-    });
-  }
+  // (openVideoPaymentModal removed — wallet-only purchase flow via openPurchaseOptionsModal)
 
 
   // ══════════════════════════════════════════
@@ -1466,10 +1077,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Open Purchase Options Modal
+  // Open Purchase Options Modal (wallet-only, 7-day access)
   function openPurchaseOptionsModal(videoId) {
     const videoData = videoDataMap[videoId];
     if (!videoData) return;
+
+    if (videoData.purchased) {
+      showToast('You already have active access to this video!', 'success');
+      openVideoPlayer(videoId);
+      return;
+    }
 
     const videoPrice = videoData.price;
     const videoPriceRupees = videoData.price_rupees;
@@ -1483,51 +1100,44 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="auth-modal purchase-options-modal" style="max-width: 500px; animation: slideUp 0.3s ease;">
         <button class="auth-close" aria-label="Close">&times;</button>
 
-        <h2 style="margin: 0 0 20px; font-size: 22px; text-align: center;">Choose Payment Method</h2>
+        <h2 style="margin: 0 0 20px; font-size: 22px; text-align: center;">Purchase Video</h2>
 
         <div class="video-preview" style="display: flex; gap: 15px; margin-bottom: 20px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
           <img src="${videoData.thumbnail_url}" style="width: 120px; height: 68px; object-fit: cover; border-radius: 6px;">
           <div style="flex: 1;">
             <h3 style="margin: 0 0 5px; font-size: 16px; line-height: 1.3;">${videoData.title}</h3>
-            <div style="font-size: 13px; color: rgba(255,255,255,0.5);">${videoData.category}</div>
             <div style="margin-top: 8px; font-size: 20px; font-weight: 700; color: var(--accent);">₹${videoPriceRupees}</div>
+            <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px;">7 days of access</div>
           </div>
         </div>
 
-        <div class="payment-methods" style="display: flex; flex-direction: column; gap: 12px;">
-          <button class="pay-method wallet-pay"
-                  ${!hasSufficientBalance ? 'disabled' : ''}
-                  style="padding: 16px; background: ${hasSufficientBalance ? 'linear-gradient(135deg, var(--accent), #6aad2d)' : 'rgba(255,255,255,0.05)'};
-                         color: ${hasSufficientBalance ? '#111' : 'rgba(255,255,255,0.3)'}; border: none; border-radius: 10px;
-                         cursor: ${hasSufficientBalance ? 'pointer' : 'not-allowed'}; text-align: left; transition: all 0.2s;">
-            <div class="method-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 16px; font-weight: 700;">💰 Pay from Wallet</span>
-              <span class="method-badge" style="padding: 4px 8px; background: rgba(0,0,0,0.2); border-radius: 4px; font-size: 11px; font-weight: 600;">INSTANT</span>
-            </div>
-            <div class="method-balance" style="font-size: 13px; opacity: 0.8;">Current Balance: ₹${walletBalanceRupees}</div>
-            ${hasSufficientBalance
-              ? `<div class="method-remaining" style="font-size: 13px; opacity: 0.8;">After purchase: ₹${Math.round(remainingBalance / 100)}</div>`
-              : `<div style="font-size: 13px; color: #ff4444; font-weight: 600; margin-top: 4px;">Insufficient balance</div>`
-            }
-          </button>
-
-          <button class="pay-method direct-pay"
-                  style="padding: 16px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1);
-                         border-radius: 10px; cursor: pointer; text-align: left; transition: all 0.2s;">
-            <div class="method-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 16px; font-weight: 700;">💳 Pay Directly</span>
-            </div>
-            <div class="method-options" style="font-size: 13px; opacity: 0.7;">UPI • Cards • Net Banking • Wallets</div>
-          </button>
-        </div>
+        <button class="pay-method wallet-pay"
+                ${!hasSufficientBalance ? 'disabled' : ''}
+                style="width: 100%; padding: 16px; background: ${hasSufficientBalance ? 'linear-gradient(135deg, var(--accent), #6aad2d)' : 'rgba(255,255,255,0.05)'};
+                       color: ${hasSufficientBalance ? '#111' : 'rgba(255,255,255,0.3)'}; border: none; border-radius: 10px;
+                       cursor: ${hasSufficientBalance ? 'pointer' : 'not-allowed'}; text-align: left; transition: all 0.2s; margin-bottom: 12px;">
+          <div class="method-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 16px; font-weight: 700;">💰 Pay ₹${videoPriceRupees} from Wallet</span>
+          </div>
+          <div class="method-balance" style="font-size: 13px; opacity: 0.8;">Current Balance: ₹${walletBalanceRupees}</div>
+          ${hasSufficientBalance
+            ? `<div class="method-remaining" style="font-size: 13px; opacity: 0.8;">After purchase: ₹${Math.round(remainingBalance / 100)}</div>`
+            : `<div style="font-size: 13px; color: #ff4444; font-weight: 600; margin-top: 4px;">Insufficient balance — add money to continue</div>`
+          }
+        </button>
 
         ${!hasSufficientBalance
-          ? `<a href="#" class="add-money-link" style="display: block; text-align: center; margin-top: 15px; color: var(--accent);
-                 font-size: 14px; text-decoration: none; font-weight: 600;">
-               Don't have enough balance? Add money to wallet →
-             </a>`
+          ? `<button class="add-money-btn"
+                    style="width: 100%; padding: 14px; background: rgba(255,255,255,0.08); color: var(--accent); border: 1px solid rgba(133,199,66,0.3);
+                           border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s;">
+               + Add Money to Wallet
+             </button>`
           : ''
         }
+
+        <p style="text-align: center; font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 16px; margin-bottom: 0;">
+          Access expires after 7 days. You can re-purchase anytime.
+        </p>
       </div>
     `;
 
@@ -1537,21 +1147,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const walletPayBtn = overlay.querySelector('.wallet-pay');
     if (hasSufficientBalance) {
       walletPayBtn.addEventListener('click', async () => {
-        overlay.remove();
+        walletPayBtn.disabled = true;
+        walletPayBtn.querySelector('.method-header span').textContent = 'Processing...';
         await purchaseWithWallet(videoId);
+        overlay.remove();
       });
     }
 
-    // Direct payment button
-    overlay.querySelector('.direct-pay').addEventListener('click', () => {
-      overlay.remove();
-      openVideoPaymentModal(videoId); // Use existing Razorpay flow
-    });
-
-    // Add money link
-    if (!hasSufficientBalance) {
-      overlay.querySelector('.add-money-link').addEventListener('click', (e) => {
-        e.preventDefault();
+    // Add money button
+    const addMoneyBtn = overlay.querySelector('.add-money-btn');
+    if (addMoneyBtn) {
+      addMoneyBtn.addEventListener('click', () => {
         overlay.remove();
         openAddMoneyModal();
       });
@@ -1595,7 +1201,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateVideoCards();
 
         // Show success toast and open video
-        showToast('Video purchased successfully! Opening video...', 'success');
+        showToast('Purchased! You have 7 days of access.', 'success');
         setTimeout(() => openVideoPlayer(videoId), 500);
       } else {
         showToast(data.error, 'info');
@@ -1974,8 +1580,23 @@ document.addEventListener('DOMContentLoaded', () => {
               const formattedDate = purchaseDate.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
               const paymentMethod = purchase.payment_method === 'wallet' ? 'Wallet' : 'Direct';
 
+              // Expiry info
+              let expiryLabel = '';
+              let isExpired = false;
+              if (purchase.expires_at) {
+                const expiryDate = new Date(purchase.expires_at);
+                const now = new Date();
+                if (expiryDate > now) {
+                  const daysLeft = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+                  expiryLabel = `<span style="color: var(--accent); font-weight: 600;">${daysLeft} day${daysLeft !== 1 ? 's' : ''} left</span>`;
+                } else {
+                  expiryLabel = `<span style="color: #ff6b6b; font-weight: 600;">Expired</span>`;
+                  isExpired = true;
+                }
+              }
+
               return `
-                <div class="purchased-video-item" style="display: flex; gap: 16px; padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 10px; transition: all 0.2s; cursor: pointer;" data-video-id="${purchase.video_id}">
+                <div class="purchased-video-item" style="display: flex; gap: 16px; padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid ${isExpired ? 'rgba(255,68,68,0.15)' : 'rgba(255,255,255,0.05)'}; border-radius: 12px; margin-bottom: 10px; transition: all 0.2s; cursor: pointer; ${isExpired ? 'opacity: 0.6;' : ''}" data-video-id="${purchase.video_id}">
                   <img src="${purchase.thumbnail_url}" style="width: 140px; height: 80px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
                   <div style="flex: 1; min-width: 0;">
                     <h4 style="margin: 0 0 6px; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${purchase.title}</h4>
@@ -1984,6 +1605,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       ${purchase.duration ? ` · ${purchase.duration}` : ''}
                       · ${paymentMethod} · ${formattedDate}
                     </div>
+                    ${expiryLabel ? `<div style="font-size: 12px; margin-top: 4px;">${expiryLabel}</div>` : ''}
                   </div>
                 </div>
               `;

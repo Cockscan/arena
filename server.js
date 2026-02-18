@@ -18,7 +18,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'pixelplex-secret-key-change-in-pro
 // ── Razorpay instance ──
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
-const PLAN_AMOUNT = parseInt(process.env.PLAN_AMOUNT || '9900'); // Amount in paise (9900 = ₹99)
 
 let razorpay = null;
 if (RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
@@ -111,13 +110,13 @@ app.post('/api/signup', async (req, res) => {
       if (memoryUsers.find(u => u.username.toLowerCase() === trimmedUsername.toLowerCase())) {
         return res.status(400).json({ ok: false, error: 'This username is taken' });
       }
-      user = { id: memoryUsers.length + 1, username: trimmedUsername, email: trimmedEmail, password_hash: passwordHash, payment_status: 'pending', created_at: new Date().toISOString() };
+      user = { id: memoryUsers.length + 1, username: trimmedUsername, email: trimmedEmail, password_hash: passwordHash, created_at: new Date().toISOString() };
       memoryUsers.push(user);
     }
 
     // Create JWT token
     const token = jwt.sign(
-      { id: user.id, username: user.username, email: user.email, payment_status: 'pending' },
+      { id: user.id, username: user.username, email: user.email },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -131,7 +130,7 @@ app.post('/api/signup', async (req, res) => {
 
     return res.json({
       ok: true,
-      user: { id: user.id, username: user.username, email: user.email, payment_status: 'pending' }
+      user: { id: user.id, username: user.username, email: user.email }
     });
 
   } catch (err) {
@@ -155,7 +154,7 @@ app.post('/api/signin', async (req, res) => {
     if (isDBReady()) {
       // ── PostgreSQL path ──
       const result = await pool.query(
-        'SELECT id, username, email, password_hash, payment_status FROM users WHERE email = $1 OR LOWER(username) = $1',
+        'SELECT id, username, email, password_hash FROM users WHERE email = $1 OR LOWER(username) = $1',
         [trimmedIdentifier]
       );
       if (result.rows.length === 0) {
@@ -177,11 +176,9 @@ app.post('/api/signin', async (req, res) => {
       return res.status(401).json({ ok: false, error: 'Invalid username/email or password' });
     }
 
-    const paymentStatus = user.payment_status || 'pending';
-
     // Create JWT token
     const token = jwt.sign(
-      { id: user.id, username: user.username, email: user.email, payment_status: paymentStatus },
+      { id: user.id, username: user.username, email: user.email },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -195,7 +192,7 @@ app.post('/api/signin', async (req, res) => {
 
     return res.json({
       ok: true,
-      user: { id: user.id, username: user.username, email: user.email, payment_status: paymentStatus }
+      user: { id: user.id, username: user.username, email: user.email }
     });
 
   } catch (err) {
@@ -209,31 +206,22 @@ app.get('/api/me', authenticateToken, async (req, res) => {
   if (!req.user) {
     return res.json({ ok: false, user: null });
   }
-  // Fetch fresh payment status and wallet balance from DB
-  let paymentStatus = 'pending';
+  // Fetch wallet balance from DB
   let walletBalance = 0;
   let walletBalanceRupees = 0;
   if (isDBReady()) {
     try {
-      const result = await pool.query('SELECT payment_status FROM users WHERE id = $1', [req.user.id]);
-      if (result.rows.length > 0) paymentStatus = result.rows[0].payment_status;
-
-      // Get wallet balance
       const walletResult = await pool.query('SELECT balance FROM wallets WHERE user_id = $1', [req.user.id]);
       if (walletResult.rows.length > 0) {
         walletBalance = walletResult.rows[0].balance;
         walletBalanceRupees = Math.round(walletBalance / 100);
       }
     } catch (e) { /* use default */ }
-  } else {
-    const memUser = memoryUsers.find(u => u.id === req.user.id);
-    if (memUser) paymentStatus = memUser.payment_status || 'pending';
   }
   return res.json({
     ok: true,
     user: {
       ...req.user,
-      payment_status: paymentStatus,
       wallet_balance: walletBalance,
       wallet_balance_rupees: walletBalanceRupees
     }
@@ -298,11 +286,11 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
       await pool.query(`UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex}`, values);
 
       // Get updated user and issue new token
-      const updatedResult = await pool.query('SELECT id, username, email, payment_status FROM users WHERE id = $1', [req.user.id]);
+      const updatedResult = await pool.query('SELECT id, username, email FROM users WHERE id = $1', [req.user.id]);
       const updated = updatedResult.rows[0];
 
       const token = jwt.sign(
-        { id: updated.id, username: updated.username, email: updated.email, payment_status: updated.payment_status },
+        { id: updated.id, username: updated.username, email: updated.email },
         JWT_SECRET,
         { expiresIn: '7d' }
       );
@@ -335,7 +323,7 @@ app.get('/api/videos', authenticateToken, async (req, res) => {
 
       if (req.user) {
         const purchaseResult = await pool.query(
-          'SELECT video_id FROM purchases WHERE user_id = $1',
+          'SELECT video_id FROM purchases WHERE user_id = $1 AND (expires_at IS NULL OR expires_at > NOW())',
           [req.user.id]
         );
         purchasedIds = purchaseResult.rows.map(r => r.video_id);
@@ -377,7 +365,7 @@ app.get('/api/videos/:id', authenticateToken, async (req, res) => {
 
       if (req.user) {
         const pResult = await pool.query(
-          'SELECT id FROM purchases WHERE user_id = $1 AND video_id = $2',
+          'SELECT id, expires_at FROM purchases WHERE user_id = $1 AND video_id = $2 AND (expires_at IS NULL OR expires_at > NOW()) ORDER BY expires_at DESC LIMIT 1',
           [req.user.id, videoId]
         );
         purchased = pResult.rows.length > 0;
@@ -406,7 +394,7 @@ app.get('/api/purchases', authenticateToken, async (req, res) => {
 
     if (isDBReady()) {
       const result = await pool.query(
-        `SELECT p.id, p.video_id, p.payment_amount, p.payment_method, p.purchased_at,
+        `SELECT p.id, p.video_id, p.payment_amount, p.payment_method, p.purchased_at, p.expires_at,
                 v.title, v.category, v.sport, v.thumbnail_url, v.duration, v.channel_name
          FROM purchases p
          JOIN videos v ON v.id = p.video_id
@@ -435,29 +423,13 @@ app.get('/api/purchases', authenticateToken, async (req, res) => {
 //  PAYMENT API ROUTES (Razorpay UPI)
 // ══════════════════════════════════════════
 
-// GET /api/payment/config — returns public key and amount for frontend
+// GET /api/payment/config — returns public key for frontend
 app.get('/api/payment/config', async (req, res) => {
-  const videoId = req.query.video_id ? parseInt(req.query.video_id) : null;
-  let videoInfo = null;
-
-  if (videoId) {
-    if (isDBReady()) {
-      const result = await pool.query('SELECT id, title, price, thumbnail_url FROM videos WHERE id = $1', [videoId]);
-      if (result.rows.length > 0) videoInfo = result.rows[0];
-    } else {
-      const found = memoryVideos.find(v => v.id === videoId);
-      if (found) videoInfo = { id: found.id, title: found.title, price: found.price, thumbnail_url: found.thumbnail_url };
-    }
-  }
-
   return res.json({
     key_id: RAZORPAY_KEY_ID,
-    amount: videoInfo ? videoInfo.price : PLAN_AMOUNT,
     currency: 'INR',
     name: 'PixelPlex',
-    description: videoInfo ? videoInfo.title : 'PixelPlex Account Activation',
     enabled: !!razorpay,
-    video: videoInfo ? { id: videoInfo.id, title: videoInfo.title, price: videoInfo.price, price_rupees: Math.round(videoInfo.price / 100), thumbnail_url: videoInfo.thumbnail_url } : null
   });
 });
 
@@ -467,46 +439,48 @@ app.post('/api/payment/create-order', authenticateToken, async (req, res) => {
   if (!razorpay) return res.status(503).json({ ok: false, error: 'Payment system not configured' });
 
   try {
-    const { video_id } = req.body;
-    let amount, receiptPrefix, notes;
+    const { video_id, amount: walletAmount } = req.body;
 
-    if (video_id) {
-      // Video purchase mode
-      let video;
-      if (isDBReady()) {
-        const result = await pool.query('SELECT id, title, price FROM videos WHERE id = $1', [video_id]);
-        if (result.rows.length === 0) return res.status(404).json({ ok: false, error: 'Video not found' });
-        video = result.rows[0];
-      } else {
-        video = memoryVideos.find(v => v.id === video_id);
-        if (!video) return res.status(404).json({ ok: false, error: 'Video not found' });
-      }
+    if (walletAmount) {
+      // Wallet top-up mode
+      const order = await razorpay.orders.create({
+        amount: walletAmount,
+        currency: 'INR',
+        receipt: `wallet_${req.user.id}_${Date.now()}`,
+        notes: { user_id: String(req.user.id), type: 'wallet_deposit' }
+      });
+      return res.json({ ok: true, order });
+    }
 
-      // Check if already purchased
-      let alreadyPurchased = false;
-      if (isDBReady()) {
-        const pResult = await pool.query('SELECT id FROM purchases WHERE user_id = $1 AND video_id = $2', [req.user.id, video_id]);
-        alreadyPurchased = pResult.rows.length > 0;
-      } else {
-        alreadyPurchased = memoryPurchases.some(p => p.user_id === req.user.id && p.video_id === video_id);
-      }
-      if (alreadyPurchased) return res.status(400).json({ ok: false, error: 'You already own this video' });
+    if (!video_id) {
+      return res.status(400).json({ ok: false, error: 'Video ID or wallet amount required' });
+    }
 
-      amount = video.price;
-      receiptPrefix = `video_${video_id}`;
-      notes = { user_id: String(req.user.id), video_id: String(video_id), type: 'video_purchase', video_title: video.title };
+    // Video purchase mode (via Razorpay direct)
+    let video;
+    if (isDBReady()) {
+      const result = await pool.query('SELECT id, title, price FROM videos WHERE id = $1', [video_id]);
+      if (result.rows.length === 0) return res.status(404).json({ ok: false, error: 'Video not found' });
+      video = result.rows[0];
     } else {
-      // Account activation mode (existing flow)
-      amount = PLAN_AMOUNT;
-      receiptPrefix = `pixelplex_${req.user.id}`;
-      notes = { user_id: String(req.user.id), username: req.user.username, email: req.user.email, type: 'account_activation' };
+      video = memoryVideos.find(v => v.id === video_id);
+      if (!video) return res.status(404).json({ ok: false, error: 'Video not found' });
+    }
+
+    // Check for active (non-expired) purchase
+    if (isDBReady()) {
+      const pResult = await pool.query(
+        'SELECT id FROM purchases WHERE user_id = $1 AND video_id = $2 AND (expires_at IS NULL OR expires_at > NOW())',
+        [req.user.id, video_id]
+      );
+      if (pResult.rows.length > 0) return res.status(400).json({ ok: false, error: 'You already have active access to this video' });
     }
 
     const order = await razorpay.orders.create({
-      amount,
+      amount: video.price,
       currency: 'INR',
-      receipt: `${receiptPrefix}_${Date.now()}`,
-      notes
+      receipt: `video_${video_id}_${Date.now()}`,
+      notes: { user_id: String(req.user.id), video_id: String(video_id), type: 'video_purchase', video_title: video.title }
     });
 
     return res.json({ ok: true, order });
@@ -546,59 +520,32 @@ app.post('/api/payment/verify', authenticateToken, async (req, res) => {
         if (vResult.rows.length === 0) return res.status(404).json({ ok: false, error: 'Video not found' });
         video = vResult.rows[0];
 
+        // 7-day access window
         await pool.query(
-          'INSERT INTO purchases (user_id, video_id, payment_id, order_id, payment_amount) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (user_id, video_id) DO NOTHING',
+          `INSERT INTO purchases (user_id, video_id, payment_id, order_id, payment_amount, expires_at)
+           VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '7 days')`,
           [req.user.id, video_id, razorpay_payment_id, razorpay_order_id, video.price]
         );
       } else {
         video = memoryVideos.find(v => v.id === video_id);
         if (!video) return res.status(404).json({ ok: false, error: 'Video not found' });
 
-        const exists = memoryPurchases.some(p => p.user_id === req.user.id && p.video_id === video_id);
-        if (!exists) {
-          memoryPurchases.push({
-            id: memoryPurchases.length + 1,
-            user_id: req.user.id,
-            video_id: video_id,
-            payment_id: razorpay_payment_id,
-            order_id: razorpay_order_id,
-            payment_amount: video.price,
-            purchased_at: new Date().toISOString()
-          });
-        }
+        memoryPurchases.push({
+          id: memoryPurchases.length + 1,
+          user_id: req.user.id,
+          video_id: video_id,
+          payment_id: razorpay_payment_id,
+          order_id: razorpay_order_id,
+          payment_amount: video.price,
+          purchased_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        });
       }
 
-      return res.json({ ok: true, message: 'Video purchased successfully!', type: 'video_purchase', video_id });
+      return res.json({ ok: true, message: 'Video purchased! You have 7 days of access.', type: 'video_purchase', video_id });
 
     } else {
-      // ── ACCOUNT ACTIVATION verification (existing flow) ──
-      if (isDBReady()) {
-        await pool.query(
-          'UPDATE users SET payment_status = $1, payment_id = $2, payment_amount = $3, paid_at = NOW() WHERE id = $4',
-          ['paid', razorpay_payment_id, PLAN_AMOUNT, req.user.id]
-        );
-      } else {
-        const memUser = memoryUsers.find(u => u.id === req.user.id);
-        if (memUser) {
-          memUser.payment_status = 'paid';
-          memUser.payment_id = razorpay_payment_id;
-        }
-      }
-
-      // Issue new token with paid status
-      const token = jwt.sign(
-        { id: req.user.id, username: req.user.username, email: req.user.email, payment_status: 'paid' },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-      );
-      res.cookie('pixelplex_token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000
-      });
-
-      return res.json({ ok: true, message: 'Payment verified! Account activated.', type: 'account_activation' });
+      return res.status(400).json({ ok: false, error: 'Video ID required' });
     }
   } catch (err) {
     console.error('Payment verify DB error:', err);
@@ -805,13 +752,13 @@ app.post('/api/wallet/purchase-video', authenticateToken, async (req, res) => {
         }
         const video = videoResult.rows[0];
 
-        // Check if already purchased
+        // Check for active (non-expired) purchase
         const purchaseCheck = await client.query(
-          'SELECT id FROM purchases WHERE user_id = $1 AND video_id = $2',
+          'SELECT id FROM purchases WHERE user_id = $1 AND video_id = $2 AND (expires_at IS NULL OR expires_at > NOW())',
           [req.user.id, video_id]
         );
         if (purchaseCheck.rows.length > 0) {
-          throw new Error('You already own this video');
+          throw new Error('You already have active access to this video');
         }
 
         // Get wallet with row lock
@@ -856,12 +803,12 @@ app.post('/api/wallet/purchase-video', authenticateToken, async (req, res) => {
           ]
         );
 
-        // Create purchase record
+        // Create purchase record with 7-day expiry
         const purchaseResult = await client.query(
           `INSERT INTO purchases
-            (user_id, video_id, payment_id, order_id, payment_amount, payment_method, wallet_transaction_id)
-           VALUES ($1, $2, $3, $4, $5, 'wallet', $6)
-           RETURNING id`,
+            (user_id, video_id, payment_id, order_id, payment_amount, payment_method, wallet_transaction_id, expires_at)
+           VALUES ($1, $2, $3, $4, $5, 'wallet', $6, NOW() + INTERVAL '7 days')
+           RETURNING id, expires_at`,
           [
             req.user.id,
             video_id,
@@ -876,12 +823,13 @@ app.post('/api/wallet/purchase-video', authenticateToken, async (req, res) => {
 
         return res.json({
           ok: true,
-          message: 'Video purchased successfully!',
+          message: 'Video purchased! You have 7 days of access.',
           remaining_balance: balanceAfter,
           remaining_balance_rupees: Math.round(balanceAfter / 100),
           video_id,
           purchase_id: purchaseResult.rows[0].id,
-          transaction_id: txResult.rows[0].id
+          transaction_id: txResult.rows[0].id,
+          expires_at: purchaseResult.rows[0].expires_at
         });
 
       } catch (err) {
@@ -889,8 +837,8 @@ app.post('/api/wallet/purchase-video', authenticateToken, async (req, res) => {
         if (err.message === 'Insufficient wallet balance') {
           return res.status(400).json({ ok: false, error: 'Insufficient wallet balance' });
         }
-        if (err.message === 'You already own this video') {
-          return res.status(400).json({ ok: false, error: 'You already own this video' });
+        if (err.message === 'You already have active access to this video') {
+          return res.status(400).json({ ok: false, error: 'You already have active access to this video' });
         }
         throw err;
       } finally {

@@ -270,13 +270,16 @@ router.post('/videos/upload', adminAuth, upload.single('video'), async (req, res
     if (!isR2Ready()) return res.status(503).json({ ok: false, error: 'Storage (R2) not configured' });
     if (!req.file) return res.status(400).json({ ok: false, error: 'No video file uploaded' });
 
-    const { title, tag, category_id } = req.body;
+    const { title, tag, category_id, price } = req.body;
     if (!title || !title.trim()) {
       return res.status(400).json({ ok: false, error: 'Video title is required' });
     }
     if (!category_id) {
       return res.status(400).json({ ok: false, error: 'Category is required' });
     }
+
+    // Price in paise (e.g. 4900 = ₹49). Default to 0 (free) if not provided.
+    const priceInPaise = price ? parseInt(price) : 0;
 
     const videoBuffer = req.file.buffer;
     const originalName = req.file.originalname;
@@ -332,7 +335,7 @@ router.post('/videos/upload', adminAuth, upload.single('video'), async (req, res
         title.trim(),
         '', // category text (legacy, using category_id now)
         '', // sport (legacy)
-        0,  // price (free by default)
+        priceInPaise,
         thumbnailUrl || '',
         videoUrl,
         durationStr,
@@ -365,7 +368,7 @@ router.put('/videos/:id', adminAuth, async (req, res) => {
     if (!isDBReady()) return res.status(503).json({ ok: false, error: 'Database not available' });
 
     const { id } = req.params;
-    const { title, tag, category_id, is_premium } = req.body;
+    const { title, tag, category_id, is_premium, price } = req.body;
 
     const updates = [];
     const values = [];
@@ -375,6 +378,7 @@ router.put('/videos/:id', adminAuth, async (req, res) => {
     if (tag !== undefined) { updates.push(`tag = $${paramIndex++}`); values.push(tag || null); }
     if (category_id !== undefined) { updates.push(`category_id = $${paramIndex++}`); values.push(parseInt(category_id)); }
     if (is_premium !== undefined) { updates.push(`is_premium = $${paramIndex++}`); values.push(is_premium); }
+    if (price !== undefined) { updates.push(`price = $${paramIndex++}`); values.push(parseInt(price)); }
 
     if (updates.length === 0) {
       return res.status(400).json({ ok: false, error: 'No fields to update' });
@@ -444,13 +448,13 @@ router.get('/users', adminAuth, async (req, res) => {
     if (!isDBReady()) return res.status(503).json({ ok: false, error: 'Database not available' });
 
     const result = await pool.query(`
-      SELECT u.id, u.username, u.email, u.payment_status, u.created_at,
+      SELECT u.id, u.username, u.email, u.created_at,
              COALESCE(w.balance, 0) as wallet_balance,
              COUNT(p.id) as total_purchases
       FROM users u
       LEFT JOIN wallets w ON w.user_id = u.id
       LEFT JOIN purchases p ON p.user_id = u.id
-      GROUP BY u.id, u.username, u.email, u.payment_status, u.created_at, w.balance
+      GROUP BY u.id, u.username, u.email, u.created_at, w.balance
       ORDER BY u.created_at DESC
     `);
 
@@ -503,6 +507,91 @@ router.get('/transactions', adminAuth, async (req, res) => {
   } catch (err) {
     console.error('Admin transactions error:', err);
     return res.status(500).json({ ok: false, error: 'Could not load transactions' });
+  }
+});
+
+// ══════════════════════════════════════════
+//  ADMIN WALLET CREDIT
+// ══════════════════════════════════════════
+
+// POST /api/admin/users/:id/add-balance — credit a user's wallet
+router.post('/users/:id/add-balance', adminAuth, async (req, res) => {
+  try {
+    if (!isDBReady()) return res.status(503).json({ ok: false, error: 'Database not available' });
+
+    const userId = parseInt(req.params.id);
+    const { amount } = req.body; // amount in paise
+
+    if (!amount || amount < 100 || amount > 10000000) {
+      return res.status(400).json({ ok: false, error: 'Amount must be between ₹1 and ₹1,00,000' });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Verify user exists
+      const userResult = await client.query('SELECT id, username FROM users WHERE id = $1', [userId]);
+      if (userResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ ok: false, error: 'User not found' });
+      }
+
+      // Get or create wallet with row lock
+      let walletResult = await client.query(
+        'SELECT id, balance FROM wallets WHERE user_id = $1 FOR UPDATE',
+        [userId]
+      );
+      if (walletResult.rows.length === 0) {
+        walletResult = await client.query(
+          'INSERT INTO wallets (user_id, balance) VALUES ($1, 0) RETURNING id, balance',
+          [userId]
+        );
+      }
+
+      const wallet = walletResult.rows[0];
+      const balanceBefore = wallet.balance;
+      const balanceAfter = balanceBefore + parseInt(amount);
+
+      // Update wallet balance
+      await client.query(
+        'UPDATE wallets SET balance = $1, updated_at = NOW() WHERE id = $2',
+        [balanceAfter, wallet.id]
+      );
+
+      // Create transaction record
+      await client.query(
+        `INSERT INTO wallet_transactions
+          (user_id, wallet_id, type, amount, balance_before, balance_after, description, status)
+         VALUES ($1, $2, 'DEPOSIT', $3, $4, $5, $6, 'completed')`,
+        [
+          userId,
+          wallet.id,
+          parseInt(amount),
+          balanceBefore,
+          balanceAfter,
+          `Admin credit of ₹${Math.round(amount / 100)} by ${req.admin.username}`
+        ]
+      );
+
+      await client.query('COMMIT');
+
+      return res.json({
+        ok: true,
+        message: `₹${Math.round(amount / 100)} added to ${userResult.rows[0].username}'s wallet`,
+        new_balance: balanceAfter,
+        new_balance_rupees: Math.round(balanceAfter / 100)
+      });
+
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error('Admin add balance error:', err);
+    return res.status(500).json({ ok: false, error: 'Could not add balance' });
   }
 });
 

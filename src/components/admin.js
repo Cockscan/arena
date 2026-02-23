@@ -759,21 +759,33 @@
 
     for (const video of videos) {
       try {
+        let success = false;
+
+        // Try client-side first (proxy video, grab frame)
         const thumbBlob = await grabFrameFromUrl(video.id);
         if (thumbBlob) {
           const formData = new FormData();
           formData.append('thumbnail', thumbBlob, 'thumbnail.jpg');
-
           const res = await fetch(`/api/admin/videos/${video.id}/regenerate-thumbnail`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${adminToken}` },
             body: formData
           });
           const result = await res.json();
-          if (result.ok) { fixed++; } else { failed++; }
-        } else {
-          failed++;
+          if (result.ok) success = true;
         }
+
+        // Fallback: let the server do it with ffmpeg
+        if (!success) {
+          const res = await fetch(`/api/admin/videos/${video.id}/regenerate-thumbnail`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+          });
+          const result = await res.json();
+          if (result.ok) success = true;
+        }
+
+        if (success) { fixed++; } else { failed++; }
       } catch (e) {
         console.error(`Thumb fix failed for video ${video.id}:`, e);
         failed++;

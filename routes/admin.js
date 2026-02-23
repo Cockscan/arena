@@ -607,8 +607,8 @@ router.post('/users/:id/add-balance', adminAuth, async (req, res) => {
   }
 });
 
-// REGENERATE thumbnail
-router.post('/videos/:id/regenerate-thumbnail', adminAuth, async (req, res) => {
+// REGENERATE thumbnail — accepts client-uploaded thumbnail or falls back to ffmpeg
+router.post('/videos/:id/regenerate-thumbnail', adminAuth, upload.single('thumbnail'), async (req, res) => {
   try {
     if (!isDBReady()) return res.status(503).json({ ok: false, error: 'Database not available' });
     if (!isR2Ready()) return res.status(503).json({ ok: false, error: 'Storage (R2) not configured' });
@@ -620,17 +620,19 @@ router.post('/videos/:id/regenerate-thumbnail', adminAuth, async (req, res) => {
     }
 
     const video = videoResult.rows[0];
-    if (!video.file_key) {
-      return res.status(400).json({ ok: false, error: 'No video file to generate thumbnail from' });
+    let thumbBuffer = null;
+
+    // Prefer client-sent thumbnail
+    if (req.file && req.file.buffer) {
+      thumbBuffer = req.file.buffer;
+    } else if (video.file_key) {
+      // Fallback: download video and use ffmpeg
+      const videoBuffer = await downloadFile(video.file_key);
+      thumbBuffer = await generateThumbnail(videoBuffer);
     }
 
-    // Download video from R2
-    const videoBuffer = await downloadFile(video.file_key);
-
-    // Generate thumbnail
-    const thumbBuffer = await generateThumbnail(videoBuffer);
     if (!thumbBuffer) {
-      return res.status(500).json({ ok: false, error: 'Thumbnail generation failed — ffmpeg may not be available' });
+      return res.status(500).json({ ok: false, error: 'Thumbnail generation failed' });
     }
 
     // Delete old thumbnail from R2 if exists

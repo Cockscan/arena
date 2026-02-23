@@ -290,7 +290,10 @@
     container.innerHTML = `
       <div class="page-header">
         <h1>Videos</h1>
-        <button class="btn btn-primary" id="upload-video-btn">+ Upload Video</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary" id="fix-thumbnails-btn">Fix Thumbnails</button>
+          <button class="btn btn-primary" id="upload-video-btn">+ Upload Video</button>
+        </div>
       </div>
       <div style="display: flex; gap: 12px; margin-bottom: 20px;">
         <select id="video-filter-cat" class="form-group" style="padding: 8px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: #fff; font-size: 14px;">
@@ -304,6 +307,7 @@
     `;
 
     document.getElementById('upload-video-btn').addEventListener('click', () => openUploadModal());
+    document.getElementById('fix-thumbnails-btn').addEventListener('click', () => fixAllThumbnails());
 
     // Load categories for filter
     if (categoriesCache.length === 0) {
@@ -730,6 +734,96 @@
         </div>
       `;
     }).join('');
+  }
+
+  // ── Fix All Thumbnails (client-side video+canvas) ──
+  async function fixAllThumbnails() {
+    const btn = document.getElementById('fix-thumbnails-btn');
+    if (!btn) return;
+    btn.disabled = true;
+    btn.textContent = 'Loading videos...';
+
+    const data = await api('/videos');
+    if (!data.ok) { btn.disabled = false; btn.textContent = 'Fix Thumbnails'; return; }
+
+    // Filter to R2 videos that have a video_url
+    const videos = data.videos.filter(v => v.source_type === 'r2' && v.video_url);
+    if (videos.length === 0) {
+      alert('No R2 videos found to fix');
+      btn.disabled = false; btn.textContent = 'Fix Thumbnails';
+      return;
+    }
+
+    let fixed = 0, failed = 0;
+    btn.textContent = `Fixing 0/${videos.length}...`;
+
+    for (const video of videos) {
+      try {
+        const thumbBlob = await grabFrameFromUrl(video.video_url);
+        if (thumbBlob) {
+          const formData = new FormData();
+          formData.append('thumbnail', thumbBlob, 'thumbnail.jpg');
+
+          const res = await fetch(`/api/admin/videos/${video.id}/regenerate-thumbnail`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${adminToken}` },
+            body: formData
+          });
+          const result = await res.json();
+          if (result.ok) { fixed++; } else { failed++; }
+        } else {
+          failed++;
+        }
+      } catch (e) {
+        console.error(`Thumb fix failed for video ${video.id}:`, e);
+        failed++;
+      }
+      btn.textContent = `Fixing ${fixed + failed}/${videos.length}...`;
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Fix Thumbnails';
+    alert(`Done! Fixed: ${fixed}, Failed: ${failed}`);
+    loadVideos();
+  }
+
+  function grabFrameFromUrl(videoUrl) {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.crossOrigin = 'anonymous';
+      video.preload = 'metadata';
+      video.muted = true;
+      video.playsInline = true;
+      video.src = videoUrl;
+
+      const timeout = setTimeout(() => { resolve(null); }, 15000);
+
+      video.addEventListener('loadeddata', () => {
+        video.currentTime = Math.min(2, video.duration * 0.1 || 1);
+      });
+
+      video.addEventListener('seeked', () => {
+        clearTimeout(timeout);
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 1280;
+          canvas.height = 720;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, 1280, 720);
+          canvas.toBlob((blob) => {
+            resolve(blob);
+          }, 'image/jpeg', 0.85);
+        } catch (e) {
+          console.error('Canvas error:', e);
+          resolve(null);
+        }
+      });
+
+      video.addEventListener('error', () => {
+        clearTimeout(timeout);
+        resolve(null);
+      });
+    });
   }
 
   // Add Balance modal

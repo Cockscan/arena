@@ -86,6 +86,24 @@ async function downloadFile(key) {
   return Buffer.concat(chunks);
 }
 
+// Download only the first N bytes of a file (for thumbnail generation — avoids loading entire video)
+async function downloadPartial(key, bytes = 5 * 1024 * 1024) {
+  if (!s3Client) throw new Error('R2 not configured');
+
+  const command = new GetObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: key,
+    Range: `bytes=0-${bytes - 1}`,
+  });
+
+  const response = await s3Client.send(command);
+  const chunks = [];
+  for await (const chunk of response.Body) {
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+}
+
 // Stream download to temp file (for large videos — avoids loading into memory)
 async function downloadToTempFile(key) {
   if (!s3Client) throw new Error('R2 not configured');
@@ -133,6 +151,7 @@ module.exports = {
   uploadFile,
   uploadLargeFile,
   downloadFile,
+  downloadPartial,
   downloadToTempFile,
   deleteFile,
   getPublicUrl,

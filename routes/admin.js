@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const { pool, isDBReady } = require('../db');
 const fs = require('fs');
-const { isR2Ready, generateUploadKey, uploadFile, uploadLargeFile, downloadFile, downloadToTempFile, deleteFile, getPublicUrl } = require('../services/r2');
+const { isR2Ready, generateUploadKey, uploadFile, uploadLargeFile, downloadFile, downloadPartial, downloadToTempFile, deleteFile, getPublicUrl } = require('../services/r2');
 const { generateThumbnail, generateThumbnailFromPath, getVideoDuration } = require('../services/thumbnail');
 
 const router = express.Router();
@@ -699,10 +699,9 @@ router.post('/videos/:id/regenerate-thumbnail', adminAuth, upload.single('thumbn
   }
 });
 
-// Proxy video for thumbnail generation (same-origin to avoid CORS canvas tainting)
+// Proxy first 5MB of video for thumbnail generation (same-origin to avoid CORS canvas tainting)
 // Uses query token since <video> elements can't send Authorization headers
 router.get('/videos/:id/proxy', (req, res, next) => {
-  // Accept token from query string for video element access
   if (!req.headers.authorization && req.query.token) {
     req.headers.authorization = `Bearer ${req.query.token}`;
   }
@@ -712,17 +711,35 @@ router.get('/videos/:id/proxy', (req, res, next) => {
     if (!isR2Ready()) return res.status(503).json({ ok: false, error: 'R2 not configured' });
 
     const { id } = req.params;
-    const videoResult = await pool.query('SELECT file_key, mime_type FROM videos WHERE id = $1', [parseInt(id)]);
+    const videoResult = await pool.query('SELECT file_key, video_url, mime_type FROM videos WHERE id = $1', [parseInt(id)]);
     if (videoResult.rows.length === 0) return res.status(404).json({ ok: false, error: 'Video not found' });
 
     const video = videoResult.rows[0];
-    if (!video.file_key) return res.status(400).json({ ok: false, error: 'No video file' });
 
-    const videoBuffer = await downloadFile(video.file_key);
+    // Only download first 5MB — enough for browser to decode a frame
+    let partialBuffer;
+    if (video.file_key) {
+      partialBuffer = await downloadPartial(video.file_key, 5 * 1024 * 1024);
+    } else if (video.video_url) {
+      // Download first 5MB from public URL using range request
+      const https = require('https');
+      const http = require('http');
+      const mod = video.video_url.startsWith('https') ? https : http;
+      partialBuffer = await new Promise((resolve, reject) => {
+        mod.get(video.video_url, { headers: { 'Range': 'bytes=0-5242879' } }, (response) => {
+          const chunks = [];
+          response.on('data', c => chunks.push(c));
+          response.on('end', () => resolve(Buffer.concat(chunks)));
+          response.on('error', reject);
+        }).on('error', reject);
+      });
+    } else {
+      return res.status(400).json({ ok: false, error: 'No video file' });
+    }
+
     res.set('Content-Type', video.mime_type || 'video/mp4');
-    res.set('Content-Length', videoBuffer.length);
-    res.set('Accept-Ranges', 'bytes');
-    res.send(videoBuffer);
+    res.set('Content-Length', partialBuffer.length);
+    res.end(partialBuffer);
   } catch (err) {
     console.error('Video proxy error:', err);
     res.status(500).json({ ok: false, error: 'Could not proxy video' });

@@ -627,7 +627,7 @@ router.post('/videos/:id/regenerate-thumbnail', adminAuth, upload.single('thumbn
     if (req.file && req.file.buffer) {
       thumbBuffer = req.file.buffer;
     } else if (video.file_key) {
-      // Fallback: stream video to temp file, run ffmpeg (avoids loading entire video into memory)
+      // Stream video from R2 to temp file, run ffmpeg
       let tmpPath = null;
       try {
         tmpPath = await downloadToTempFile(video.file_key);
@@ -637,8 +637,44 @@ router.post('/videos/:id/regenerate-thumbnail', adminAuth, upload.single('thumbn
       }
     }
 
+    // Fallback: download from video_url if file_key missing or ffmpeg failed
+    if (!thumbBuffer && video.video_url) {
+      let tmpPath = null;
+      try {
+        const https = require('https');
+        const http = require('http');
+        const os = require('os');
+        const path = require('path');
+        const crypto = require('crypto');
+        tmpPath = path.join(os.tmpdir(), `dl_${crypto.randomUUID()}.mp4`);
+        const mod = video.video_url.startsWith('https') ? https : http;
+
+        await new Promise((resolve, reject) => {
+          const file = fs.createWriteStream(tmpPath);
+          mod.get(video.video_url, (response) => {
+            if (response.statusCode === 301 || response.statusCode === 302) {
+              // Follow redirect
+              mod.get(response.headers.location, (res2) => {
+                res2.pipe(file);
+                file.on('finish', () => { file.close(); resolve(); });
+              }).on('error', reject);
+            } else {
+              response.pipe(file);
+              file.on('finish', () => { file.close(); resolve(); });
+            }
+          }).on('error', reject);
+        });
+
+        thumbBuffer = await generateThumbnailFromPath(tmpPath);
+      } catch (e) {
+        console.error('URL download fallback failed:', e.message);
+      } finally {
+        if (tmpPath) try { fs.unlinkSync(tmpPath); } catch (e) { /* ignore */ }
+      }
+    }
+
     if (!thumbBuffer) {
-      return res.status(500).json({ ok: false, error: 'Thumbnail generation failed' });
+      return res.status(500).json({ ok: false, error: 'Thumbnail generation failed — no file_key and URL download failed' });
     }
 
     // Delete old thumbnail from R2 if exists

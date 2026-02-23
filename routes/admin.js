@@ -14,9 +14,12 @@ const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'pixelplex-admin-secret
 // Multer config — memory storage (Railway has ephemeral filesystem)
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB
+  limits: { fileSize: 3 * 1024 * 1024 * 1024 }, // 3GB
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('video/')) {
+    if (file.fieldname === 'thumbnail') {
+      if (file.mimetype.startsWith('image/')) cb(null, true);
+      else cb(new Error('Thumbnail must be an image'));
+    } else if (file.mimetype.startsWith('video/')) {
       cb(null, true);
     } else {
       cb(new Error('Only video files are allowed'));
@@ -264,11 +267,13 @@ router.get('/videos', adminAuth, async (req, res) => {
 });
 
 // UPLOAD video
-router.post('/videos/upload', adminAuth, upload.single('video'), async (req, res) => {
+router.post('/videos/upload', adminAuth, upload.fields([{ name: 'video', maxCount: 1 }, { name: 'thumbnail', maxCount: 1 }]), async (req, res) => {
   try {
     if (!isDBReady()) return res.status(503).json({ ok: false, error: 'Database not available' });
     if (!isR2Ready()) return res.status(503).json({ ok: false, error: 'Storage (R2) not configured' });
-    if (!req.file) return res.status(400).json({ ok: false, error: 'No video file uploaded' });
+    const videoFile = req.files && req.files['video'] && req.files['video'][0];
+    const thumbnailFile = req.files && req.files['thumbnail'] && req.files['thumbnail'][0];
+    if (!videoFile) return res.status(400).json({ ok: false, error: 'No video file uploaded' });
 
     const { title, tag, category_id, price } = req.body;
     if (!title || !title.trim()) {
@@ -281,10 +286,10 @@ router.post('/videos/upload', adminAuth, upload.single('video'), async (req, res
     // Price in paise (e.g. 4900 = ₹49). Default to 0 (free) if not provided.
     const priceInPaise = price ? parseInt(price) : 0;
 
-    const videoBuffer = req.file.buffer;
-    const originalName = req.file.originalname;
-    const mimeType = req.file.mimetype;
-    const fileSize = req.file.size;
+    const videoBuffer = videoFile.buffer;
+    const originalName = videoFile.originalname;
+    const mimeType = videoFile.mimetype;
+    const fileSize = videoFile.size;
 
     // 1. Upload video to R2
     const videoKey = generateUploadKey('videos', originalName);
@@ -296,23 +301,30 @@ router.post('/videos/upload', adminAuth, upload.single('video'), async (req, res
       videoUrl = await uploadFile(videoBuffer, videoKey, mimeType);
     }
 
-    // 2. Generate thumbnail
+    // 2. Generate thumbnail — prefer client-sent, then ffmpeg, then placeholder
     let thumbnailUrl = null;
     let thumbnailKey = null;
-    const thumbBuffer = await generateThumbnail(videoBuffer);
-    if (thumbBuffer) {
+
+    if (thumbnailFile) {
+      // Client generated thumbnail
       thumbnailKey = generateUploadKey('thumbnails', originalName.replace(/\.[^.]+$/, '.jpg'));
-      thumbnailUrl = await uploadFile(thumbBuffer, thumbnailKey, 'image/jpeg');
+      thumbnailUrl = await uploadFile(thumbnailFile.buffer, thumbnailKey, 'image/jpeg');
     } else {
-      // Generate a simple SVG placeholder thumbnail and upload it
-      const placeholderSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
-        <rect width="1280" height="720" fill="#1f2326"/>
-        <polygon points="600,300 600,420 700,360" fill="#85c742" opacity="0.8"/>
-        <text x="640" y="500" text-anchor="middle" fill="#959da5" font-family="sans-serif" font-size="24">${title.trim().substring(0, 40)}</text>
-      </svg>`;
-      const placeholderBuffer = Buffer.from(placeholderSvg, 'utf-8');
-      thumbnailKey = generateUploadKey('thumbnails', 'placeholder.svg');
-      thumbnailUrl = await uploadFile(placeholderBuffer, thumbnailKey, 'image/svg+xml');
+      const thumbBuffer = await generateThumbnail(videoBuffer);
+      if (thumbBuffer) {
+        thumbnailKey = generateUploadKey('thumbnails', originalName.replace(/\.[^.]+$/, '.jpg'));
+        thumbnailUrl = await uploadFile(thumbBuffer, thumbnailKey, 'image/jpeg');
+      } else {
+        // Generate a simple SVG placeholder thumbnail and upload it
+        const placeholderSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+          <rect width="1280" height="720" fill="#1f2326"/>
+          <polygon points="600,300 600,420 700,360" fill="#85c742" opacity="0.8"/>
+          <text x="640" y="500" text-anchor="middle" fill="#959da5" font-family="sans-serif" font-size="24">${title.trim().substring(0, 40)}</text>
+        </svg>`;
+        const placeholderBuffer = Buffer.from(placeholderSvg, 'utf-8');
+        thumbnailKey = generateUploadKey('thumbnails', 'placeholder.svg');
+        thumbnailUrl = await uploadFile(placeholderBuffer, thumbnailKey, 'image/svg+xml');
+      }
     }
 
     // 3. Get video duration

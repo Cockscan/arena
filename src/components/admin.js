@@ -451,21 +451,66 @@
       if (fileInput.files.length > 0) handleFileSelect(fileInput.files[0]);
     });
 
+    let generatedThumbnail = null; // Blob from client-side canvas
+
     function handleFileSelect(file) {
       if (!file.type.startsWith('video/')) {
         alert('Please select a video file');
         return;
       }
-      if (file.size > 500 * 1024 * 1024) {
-        alert('File is too large. Maximum size is 500MB.');
+      if (file.size > 3 * 1024 * 1024 * 1024) {
+        alert('File is too large. Maximum size is 3GB.');
         return;
       }
       selectedFile = file;
+      generatedThumbnail = null;
       const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
       fileInfo.textContent = `Selected: ${file.name} (${sizeMB} MB)`;
       fileInfo.style.display = 'block';
       uploadZone.querySelector('.upload-text').textContent = file.name;
       uploadZone.querySelector('.upload-icon').textContent = '✅';
+
+      // Generate thumbnail client-side
+      generateClientThumbnail(file);
+    }
+
+    function generateClientThumbnail(file) {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.muted = true;
+      video.playsInline = true;
+      const url = URL.createObjectURL(file);
+      video.src = url;
+
+      video.addEventListener('loadeddata', () => {
+        // Seek to 2 seconds or 10% of duration
+        video.currentTime = Math.min(2, video.duration * 0.1);
+      });
+
+      video.addEventListener('seeked', () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 1280;
+          canvas.height = 720;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, 1280, 720);
+          canvas.toBlob((blob) => {
+            if (blob) {
+              generatedThumbnail = blob;
+              fileInfo.textContent += ' — Thumbnail generated';
+            }
+            URL.revokeObjectURL(url);
+          }, 'image/jpeg', 0.85);
+        } catch (e) {
+          console.error('Client thumbnail error:', e);
+          URL.revokeObjectURL(url);
+        }
+      });
+
+      video.addEventListener('error', () => {
+        console.error('Could not load video for thumbnail');
+        URL.revokeObjectURL(url);
+      });
     }
 
     // Close
@@ -494,6 +539,7 @@
 
       const formData = new FormData();
       formData.append('video', selectedFile);
+      if (generatedThumbnail) formData.append('thumbnail', generatedThumbnail, 'thumbnail.jpg');
       formData.append('title', title);
       formData.append('category_id', categoryId);
       formData.append('price', parseInt(priceRupees) * 100); // Convert rupees to paise

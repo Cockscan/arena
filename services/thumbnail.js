@@ -81,4 +81,42 @@ async function getVideoDuration(videoBuffer) {
   }
 }
 
-module.exports = { generateThumbnail, getVideoDuration };
+/**
+ * Generate a thumbnail from a video file path (no buffer needed).
+ * Extracts frame at ~2s, returns JPEG buffer.
+ */
+async function generateThumbnailFromPath(videoFilePath) {
+  const tmpDir = os.tmpdir();
+  const thumbFilename = `pp_thumb_${crypto.randomUUID()}.jpg`;
+  const thumbTmpPath = path.join(tmpDir, thumbFilename);
+
+  try {
+    await new Promise((resolve, reject) => {
+      ffmpeg(videoFilePath)
+        .on('end', resolve)
+        .on('error', (err) => {
+          console.error('ffmpeg thumbnail error:', err.message);
+          reject(err);
+        })
+        .screenshots({
+          timestamps: ['2'],
+          filename: thumbFilename,
+          folder: tmpDir,
+          size: '1280x720',
+        });
+    });
+
+    if (fs.existsSync(thumbTmpPath)) {
+      const thumbBuffer = fs.readFileSync(thumbTmpPath);
+      return thumbBuffer;
+    }
+    return null;
+  } catch (err) {
+    console.error('Thumbnail from path failed:', err.message);
+    return null;
+  } finally {
+    try { if (fs.existsSync(thumbTmpPath)) fs.unlinkSync(thumbTmpPath); } catch (e) { /* ignore */ }
+  }
+}
+
+module.exports = { generateThumbnail, generateThumbnailFromPath, getVideoDuration };

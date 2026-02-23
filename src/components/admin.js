@@ -755,6 +755,7 @@
     }
 
     let fixed = 0, failed = 0;
+    const failedNames = [];
     btn.textContent = `Fixing 0/${videos.length}...`;
 
     for (const video of videos) {
@@ -783,19 +784,21 @@
           });
           const result = await res.json();
           if (result.ok) success = true;
+          else console.error(`Server fallback failed for "${video.title}":`, result.error);
         }
 
-        if (success) { fixed++; } else { failed++; }
+        if (success) { fixed++; } else { failed++; failedNames.push(video.title); }
       } catch (e) {
-        console.error(`Thumb fix failed for video ${video.id}:`, e);
+        console.error(`Thumb fix failed for video ${video.id} "${video.title}":`, e);
         failed++;
+        failedNames.push(video.title);
       }
       btn.textContent = `Fixing ${fixed + failed}/${videos.length}...`;
     }
 
     btn.disabled = false;
     btn.textContent = 'Fix Thumbnails';
-    alert(`Done! Fixed: ${fixed}, Failed: ${failed}`);
+    alert(`Done! Fixed: ${fixed}, Failed: ${failed}${failedNames.length ? '\n\nFailed:\n• ' + failedNames.join('\n• ') : ''}`);
     loadVideos();
   }
 

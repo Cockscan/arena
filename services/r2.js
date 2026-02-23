@@ -2,6 +2,8 @@ const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = re
 const { Upload } = require('@aws-sdk/lib-storage');
 const crypto = require('crypto');
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || '';
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || '';
@@ -84,6 +86,29 @@ async function downloadFile(key) {
   return Buffer.concat(chunks);
 }
 
+// Stream download to temp file (for large videos — avoids loading into memory)
+async function downloadToTempFile(key) {
+  if (!s3Client) throw new Error('R2 not configured');
+
+  const command = new GetObjectCommand({
+    Bucket: R2_BUCKET_NAME,
+    Key: key,
+  });
+
+  const response = await s3Client.send(command);
+  const tmpPath = path.join(os.tmpdir(), `r2_dl_${crypto.randomUUID()}${path.extname(key)}`);
+  const writeStream = fs.createWriteStream(tmpPath);
+
+  await new Promise((resolve, reject) => {
+    response.Body.pipe(writeStream);
+    writeStream.on('finish', resolve);
+    writeStream.on('error', reject);
+    response.Body.on('error', reject);
+  });
+
+  return tmpPath;
+}
+
 async function deleteFile(key) {
   if (!s3Client) throw new Error('R2 not configured');
 
@@ -108,6 +133,7 @@ module.exports = {
   uploadFile,
   uploadLargeFile,
   downloadFile,
+  downloadToTempFile,
   deleteFile,
   getPublicUrl,
 };

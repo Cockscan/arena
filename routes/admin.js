@@ -2,8 +2,9 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const { pool, isDBReady } = require('../db');
-const { isR2Ready, generateUploadKey, uploadFile, uploadLargeFile, downloadFile, deleteFile, getPublicUrl } = require('../services/r2');
-const { generateThumbnail, getVideoDuration } = require('../services/thumbnail');
+const fs = require('fs');
+const { isR2Ready, generateUploadKey, uploadFile, uploadLargeFile, downloadFile, downloadToTempFile, deleteFile, getPublicUrl } = require('../services/r2');
+const { generateThumbnail, generateThumbnailFromPath, getVideoDuration } = require('../services/thumbnail');
 
 const router = express.Router();
 
@@ -626,9 +627,14 @@ router.post('/videos/:id/regenerate-thumbnail', adminAuth, upload.single('thumbn
     if (req.file && req.file.buffer) {
       thumbBuffer = req.file.buffer;
     } else if (video.file_key) {
-      // Fallback: download video and use ffmpeg
-      const videoBuffer = await downloadFile(video.file_key);
-      thumbBuffer = await generateThumbnail(videoBuffer);
+      // Fallback: stream video to temp file, run ffmpeg (avoids loading entire video into memory)
+      let tmpPath = null;
+      try {
+        tmpPath = await downloadToTempFile(video.file_key);
+        thumbBuffer = await generateThumbnailFromPath(tmpPath);
+      } finally {
+        if (tmpPath) try { fs.unlinkSync(tmpPath); } catch (e) { /* ignore */ }
+      }
     }
 
     if (!thumbBuffer) {

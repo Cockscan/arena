@@ -657,4 +657,34 @@ router.post('/videos/:id/regenerate-thumbnail', adminAuth, upload.single('thumbn
   }
 });
 
+// Proxy video for thumbnail generation (same-origin to avoid CORS canvas tainting)
+// Uses query token since <video> elements can't send Authorization headers
+router.get('/videos/:id/proxy', (req, res, next) => {
+  // Accept token from query string for video element access
+  if (!req.headers.authorization && req.query.token) {
+    req.headers.authorization = `Bearer ${req.query.token}`;
+  }
+  adminAuth(req, res, next);
+}, async (req, res) => {
+  try {
+    if (!isR2Ready()) return res.status(503).json({ ok: false, error: 'R2 not configured' });
+
+    const { id } = req.params;
+    const videoResult = await pool.query('SELECT file_key, mime_type FROM videos WHERE id = $1', [parseInt(id)]);
+    if (videoResult.rows.length === 0) return res.status(404).json({ ok: false, error: 'Video not found' });
+
+    const video = videoResult.rows[0];
+    if (!video.file_key) return res.status(400).json({ ok: false, error: 'No video file' });
+
+    const videoBuffer = await downloadFile(video.file_key);
+    res.set('Content-Type', video.mime_type || 'video/mp4');
+    res.set('Content-Length', videoBuffer.length);
+    res.set('Accept-Ranges', 'bytes');
+    res.send(videoBuffer);
+  } catch (err) {
+    console.error('Video proxy error:', err);
+    res.status(500).json({ ok: false, error: 'Could not proxy video' });
+  }
+});
+
 module.exports = router;

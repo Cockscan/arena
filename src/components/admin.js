@@ -759,7 +759,7 @@
 
     for (const video of videos) {
       try {
-        const thumbBlob = await grabFrameFromUrl(video.video_url);
+        const thumbBlob = await grabFrameFromUrl(video.id);
         if (thumbBlob) {
           const formData = new FormData();
           formData.append('thumbnail', thumbBlob, 'thumbnail.jpg');
@@ -787,16 +787,16 @@
     loadVideos();
   }
 
-  function grabFrameFromUrl(videoUrl) {
+  function grabFrameFromUrl(videoId) {
     return new Promise((resolve) => {
       const video = document.createElement('video');
-      video.crossOrigin = 'anonymous';
-      video.preload = 'metadata';
+      video.preload = 'auto';
       video.muted = true;
       video.playsInline = true;
-      video.src = videoUrl;
+      // Use same-origin proxy to avoid CORS canvas tainting
+      video.src = `/api/admin/videos/${videoId}/proxy?token=${adminToken}`;
 
-      const timeout = setTimeout(() => { resolve(null); }, 15000);
+      const timeout = setTimeout(() => { resolve(null); }, 60000);
 
       video.addEventListener('loadeddata', () => {
         video.currentTime = Math.min(2, video.duration * 0.1 || 1);

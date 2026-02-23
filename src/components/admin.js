@@ -362,6 +362,7 @@
             </div>
             <div class="card-actions">
               <button class="btn btn-secondary btn-sm" onclick="window._editVideo(${v.id})" style="flex:1">Edit</button>
+              <button class="btn btn-secondary btn-sm" onclick="window._regenThumbnail(${v.id}, '${escHtml(v.title).replace(/'/g, "\\'")}', this)" style="flex:1">Regen</button>
               <button class="btn btn-danger btn-sm" onclick="window._deleteVideo(${v.id}, '${escHtml(v.title).replace(/'/g, "\\'")}')" style="flex:1">Delete</button>
             </div>
           </div>
@@ -686,6 +687,43 @@
     else alert(data.error || 'Error deleting video');
   };
 
+  // ── Regen Thumbnail for single video ──
+  window._regenThumbnail = async function(id, title, btn) {
+    const secondsStr = prompt(`Regenerate thumbnail for "${title}"\n\nEnter the time in seconds to grab the frame from:`, '2');
+    if (secondsStr === null) return; // cancelled
+    const seekTo = parseFloat(secondsStr);
+    if (isNaN(seekTo) || seekTo < 0) { alert('Please enter a valid number of seconds'); return; }
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    try {
+      const thumbBlob = await grabFrameFromUrl(id, seekTo);
+      if (thumbBlob) {
+        const formData = new FormData();
+        formData.append('thumbnail', thumbBlob, 'thumbnail.jpg');
+        const res = await fetch(`/api/admin/videos/${id}/regenerate-thumbnail`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${adminToken}` },
+          body: formData
+        });
+        const result = await res.json();
+        if (result.ok) {
+          alert(`Thumbnail updated for "${title}" at ${seekTo}s`);
+          loadVideos();
+        } else {
+          alert(result.error || 'Failed to update thumbnail');
+        }
+      } else {
+        alert(`Could not grab frame from video "${title}". The video might not have enough data at ${seekTo}s.`);
+      }
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Regen';
+  };
+
   // ══════════════════════════════════════════
   //  USERS
   // ══════════════════════════════════════════
@@ -790,7 +828,7 @@
     loadVideos();
   }
 
-  function grabFrameFromUrl(videoId) {
+  function grabFrameFromUrl(videoId, seekTo) {
     return new Promise((resolve) => {
       const video = document.createElement('video');
       video.preload = 'auto';
@@ -802,7 +840,8 @@
       const timeout = setTimeout(() => { resolve(null); }, 60000);
 
       video.addEventListener('loadeddata', () => {
-        video.currentTime = Math.min(2, video.duration * 0.1 || 1);
+        const targetTime = seekTo != null ? seekTo : Math.min(2, video.duration * 0.1 || 1);
+        video.currentTime = Math.min(targetTime, video.duration || targetTime);
       });
 
       video.addEventListener('seeked', () => {

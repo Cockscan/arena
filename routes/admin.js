@@ -716,17 +716,19 @@ router.get('/videos/:id/proxy', (req, res, next) => {
 
     const video = videoResult.rows[0];
 
-    // Only download first 5MB — enough for browser to decode a frame
+    // Download first 15MB — enough for browser to seek to ~10s and decode a frame
+    const chunkSize = 15 * 1024 * 1024;
     let partialBuffer;
     if (video.file_key) {
-      partialBuffer = await downloadPartial(video.file_key, 5 * 1024 * 1024);
+      partialBuffer = await downloadPartial(video.file_key, chunkSize);
     } else if (video.video_url) {
-      // Download first 5MB from public URL using range request
+      // Download first 15MB from public URL using range request
       const https = require('https');
       const http = require('http');
       const mod = video.video_url.startsWith('https') ? https : http;
+      const rangeEnd = chunkSize - 1;
       partialBuffer = await new Promise((resolve, reject) => {
-        mod.get(video.video_url, { headers: { 'Range': 'bytes=0-5242879' } }, (response) => {
+        mod.get(video.video_url, { headers: { 'Range': `bytes=0-${rangeEnd}` } }, (response) => {
           const chunks = [];
           response.on('data', c => chunks.push(c));
           response.on('end', () => resolve(Buffer.concat(chunks)));

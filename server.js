@@ -13,6 +13,12 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Enforce JWT_SECRET in production to avoid security breaches
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  console.error("FATAL ERROR: JWT_SECRET environment variable is not defined.");
+  process.exit(1); // Crash the app so it doesn't run insecurely
+}
 const JWT_SECRET = process.env.JWT_SECRET || 'pixelplex-secret-key-change-in-production';
 
 // ── Razorpay instance ──

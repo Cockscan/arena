@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const { pool, isDBReady } = require('../db');
 const fs = require('fs');
-const { isR2Ready, generateUploadKey, uploadFile, uploadLargeFile, downloadFile, downloadPartial, downloadToTempFile, deleteFile, getPublicUrl } = require('../services/r2');
+const { isStorageReady, generateUploadKey, uploadFile, uploadLargeFile, downloadFile, downloadPartial, downloadToTempFile, deleteFile, getPublicUrl } = require('../services/storage');
 const { generateThumbnail, generateThumbnailFromPath, getVideoDuration } = require('../services/thumbnail');
 
 const router = express.Router();
@@ -75,7 +75,7 @@ router.get('/stats', adminAuth, async (req, res) => {
       pool.query('SELECT COUNT(*) FROM videos'),
       pool.query('SELECT COUNT(*) FROM categories'),
       pool.query('SELECT COUNT(*) FROM users'),
-      pool.query("SELECT COALESCE(SUM(file_size), 0) as total_storage FROM videos WHERE source_type = 'r2'"),
+      pool.query("SELECT COALESCE(SUM(file_size), 0) as total_storage FROM videos WHERE source_type = 'storage' OR source_type = 'r2'"),
     ]);
 
     return res.json({
@@ -342,7 +342,7 @@ router.post('/videos/upload', adminAuth, upload.fields([{ name: 'video', maxCoun
     // 5. Insert into database
     const result = await pool.query(
       `INSERT INTO videos (title, category, sport, price, thumbnail_url, video_url, duration, channel_name, channel_avatar, views, likes, tag, is_live, is_premium, category_id, file_key, thumbnail_key, file_size, mime_type, duration_seconds, upload_status, source_type)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, 'completed', 'r2')
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, 'completed', 'storage')
        RETURNING *`,
       [
         title.trim(),
@@ -430,12 +430,12 @@ router.delete('/videos/:id', adminAuth, async (req, res) => {
     const video = videoResult.rows[0];
 
     // Delete from R2 if it's an R2-hosted video
-    if (video.source_type === 'r2' && isR2Ready()) {
+    if ((video.source_type === 'storage' || video.source_type === 'r2') && isStorageReady()) {
       try {
         if (video.file_key) await deleteFile(video.file_key);
         if (video.thumbnail_key) await deleteFile(video.thumbnail_key);
-      } catch (r2Err) {
-        console.error('R2 delete error (continuing):', r2Err.message);
+      } catch (storageErr) {
+        console.error('Storage delete error (continuing):', storageErr.message);
       }
     }
 

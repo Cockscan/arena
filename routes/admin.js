@@ -271,7 +271,7 @@ router.get('/videos', adminAuth, async (req, res) => {
 router.post('/videos/upload', adminAuth, upload.fields([{ name: 'video', maxCount: 1 }, { name: 'thumbnail', maxCount: 1 }]), async (req, res) => {
   try {
     if (!isDBReady()) return res.status(503).json({ ok: false, error: 'Database not available' });
-    if (!isR2Ready()) return res.status(503).json({ ok: false, error: 'Storage (R2) not configured' });
+    if (!isStorageReady()) return res.status(503).json({ ok: false, error: 'Storage (R2) not configured' });
     const videoFile = req.files && req.files['video'] && req.files['video'][0];
     const thumbnailFile = req.files && req.files['thumbnail'] && req.files['thumbnail'][0];
     if (!videoFile) return res.status(400).json({ ok: false, error: 'No video file uploaded' });
@@ -612,7 +612,7 @@ router.post('/users/:id/add-balance', adminAuth, async (req, res) => {
 router.post('/videos/:id/regenerate-thumbnail', adminAuth, upload.single('thumbnail'), async (req, res) => {
   try {
     if (!isDBReady()) return res.status(503).json({ ok: false, error: 'Database not available' });
-    if (!isR2Ready()) return res.status(503).json({ ok: false, error: 'Storage (R2) not configured' });
+    if (!isStorageReady()) return res.status(503).json({ ok: false, error: 'Storage (R2) not configured' });
 
     const { id } = req.params;
     const videoResult = await pool.query('SELECT * FROM videos WHERE id = $1', [parseInt(id)]);
@@ -663,7 +663,7 @@ router.post('/videos/:id/regenerate-thumbnail', adminAuth, upload.single('thumbn
               file.on('finish', () => { file.close(); resolve(); });
             }
           }).on('error', reject);
-        });
+        }).on('error', reject);
 
         thumbBuffer = await generateThumbnailFromPath(tmpPath);
       } catch (e) {
@@ -708,7 +708,7 @@ router.get('/videos/:id/proxy', (req, res, next) => {
   adminAuth(req, res, next);
 }, async (req, res) => {
   try {
-    if (!isR2Ready()) return res.status(503).json({ ok: false, error: 'R2 not configured' });
+    if (!isStorageReady()) return res.status(503).json({ ok: false, error: 'Storage not configured' });
 
     const { id } = req.params;
     const videoResult = await pool.query('SELECT file_key, video_url, mime_type FROM videos WHERE id = $1', [parseInt(id)]);

@@ -52,7 +52,9 @@ async function uploadFile(buffer, key, contentType) {
   return getPublicUrl(key);
 }
 
-async function uploadLargeFile(buffer, key, contentType) {
+// Stream a file from disk to storage — memory usage stays flat (~10MB part buffer)
+// regardless of file size, unlike passing a full buffer as the Body.
+async function uploadFileStream(filePath, key, contentType) {
   if (!s3Client) throw new Error('Storage not configured');
 
   const upload = new Upload({
@@ -60,7 +62,7 @@ async function uploadLargeFile(buffer, key, contentType) {
     params: {
       Bucket: SPACES_BUCKET,
       Key: key,
-      Body: buffer,
+      Body: fs.createReadStream(filePath),
       ContentType: contentType,
     },
     queueSize: 4,
@@ -152,7 +154,7 @@ module.exports = {
   isStorageReady,
   generateUploadKey,
   uploadFile,
-  uploadLargeFile,
+  uploadFileStream,
   downloadFile,
   downloadPartial,
   downloadToTempFile,
